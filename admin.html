@@ -8,7 +8,151 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
+    <!-- Sidebar Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3 class="sidebar-title">
+                <i class="fas fa-volume-up"></i>
+                Noise Monitor
+            </h3>
+            <p class="sidebar-subtitle">Admin Dashboard</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="sidebar-stats">
+            <div class="sidebar-stat">
+                <div class="sidebar-stat-value" id="sidebarDbValue">-- dB</div>
+                <div class="sidebar-stat-label">Current</div>
+            </div>
+            <div class="sidebar-stat">
+                <div class="sidebar-stat-value" id="sidebarAdviserCount">0</div>
+                <div class="sidebar-stat-label">Active</div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">
+                <h4 class="sidebar-section-title">Monitoring</h4>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-menu-item">
+                        <a href="#current-noise-level" class="sidebar-link active" data-section="noise">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Current Noise</span>
+                            <div class="sidebar-indicator"></div>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#recent-readings" class="sidebar-link" data-section="readings">
+                            <i class="fas fa-history"></i>
+                            <span>Recent Readings</span>
+                            <span class="sidebar-badge" id="readingsCount">0</span>
+                            <div class="sidebar-indicator"></div>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#system-controls" class="sidebar-link" data-section="controls">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>System Controls</span>
+                            <div class="sidebar-indicator"></div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h4 class="sidebar-section-title">Management</h4>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-menu-item">
+                        <a href="#adviser-management" class="sidebar-link" data-section="advisers">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <span>Adviser Management</span>
+                            <span class="sidebar-badge" id="advisersBadge">0</span>
+                            <div class="sidebar-indicator"></div>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#wall-checker" class="sidebar-link" data-section="walls">
+                            <i class="fas fa-border-style"></i>
+                            <span>Wall Checker</span>
+                            <span class="sidebar-badge" id="wallsBadge">2C/2P</span>
+                            <div class="sidebar-indicator"></div>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#sms-config" class="sidebar-link" data-section="sms">
+                            <i class="fas fa-sms"></i>
+                            <span>SMS Settings</span>
+                            <span class="sidebar-badge" id="smsBadge">ON</span>
+                            <div class="sidebar-indicator"></div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h4 class="sidebar-section-title">Tools</h4>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-menu-item">
+                        <a href="#export-tools" class="sidebar-link" data-section="export">
+                            <i class="fas fa-download"></i>
+                            <span>Export Data</span>
+                            <div class="sidebar-indicator"></div>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#simulation" class="sidebar-link" data-section="simulation">
+                            <i class="fas fa-play-circle"></i>
+                            <span>Quick Simulation</span>
+                            <div class="sidebar-indicator"></div>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#reports" class="sidebar-link" data-section="reports">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Reports</span>
+                            <div class="sidebar-indicator"></div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Quick Simulation Controls -->
+        <div class="sidebar-section" id="quickSimulation">
+            <h4 class="sidebar-section-title">Quick Sim</h4>
+            <div class="quick-sim-buttons">
+                <button class="quick-sim-btn quiet" data-level="quiet">
+                    <i class="fas fa-volume-off"></i>
+                </button>
+                <button class="quick-sim-btn moderate" data-level="moderate">
+                    <i class="fas fa-volume-down"></i>
+                </button>
+                <button class="quick-sim-btn loud" data-level="loud">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="sidebar-footer">
+            <div class="sidebar-status">
+                <span class="status-dot active"></span>
+                <span>System Active</span>
+            </div>
+            <div style="font-size: 11px; color: #8b949e;">
+                Auto-scroll: <span id="autoScrollStatus">ON</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="container" id="mainContainer">
         <!-- Header -->
         <header class="header">
             <div class="header-left">
@@ -18,7 +162,7 @@
             <div class="header-right">
                 <div class="user-info">
                     <i class="fas fa-user-circle"></i>
-                    <span>Admin User</span>
+                    <span>Administrator</span>
                 </div>
                 <button id="logoutBtn" class="btn-logout">
                     <i class="fas fa-sign-out-alt"></i> Logout
@@ -29,17 +173,17 @@
         <!-- Main Content -->
         <main class="main-content">
             <!-- Current Noise Level Card -->
-            <div class="dashboard-card">
+            <div class="dashboard-card" id="current-noise-level">
                 <div class="card-header">
                     <h2><i class="fas fa-chart-line"></i> Current Noise Level</h2>
                     <p class="last-updated">Updated: <span id="lastUpdated">Just now</span></p>
                 </div>
-                
+
                 <div class="noise-level-display">
                     <div class="decibel-value" id="decibelValue">-- dB</div>
                     <div class="noise-status" id="noiseStatus">Waiting for data...</div>
                 </div>
-                
+
                 <div class="noise-indicator">
                     <div class="indicator-bar">
                         <div class="indicator-fill" id="indicatorFill"></div>
@@ -50,11 +194,11 @@
                         <span class="loud-label">Loud</span>
                     </div>
                 </div>
-                
+
                 <div class="threshold-info">
                     <div class="threshold-item">
                         <span class="threshold-color quiet"></span>
-                        <span class="threshold-text">Quiet: &lt; 60 dB</span>
+                        <span class="threshold-text">Quiet: < 60 dB</span>
                     </div>
                     <div class="threshold-item">
                         <span class="threshold-color moderate"></span>
@@ -62,13 +206,13 @@
                     </div>
                     <div class="threshold-item">
                         <span class="threshold-color loud"></span>
-                        <span class="threshold-text">Loud: &gt; 80 dB</span>
+                        <span class="threshold-text">Loud: > 80 dB</span>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Adviser Management Card -->
-            <div class="dashboard-card">
+            <div class="dashboard-card" id="adviser-management">
                 <div class="card-header">
                     <h2><i class="fas fa-chalkboard-teacher"></i> Adviser Management</h2>
                     <div class="adviser-summary">
@@ -83,7 +227,7 @@
                         </span>
                     </div>
                 </div>
-                
+
                 <div class="adviser-management-container">
                     <!-- Add New Adviser Form -->
                     <div class="add-adviser-form">
@@ -110,7 +254,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- Advisers Table -->
                     <div class="advisers-table-container">
                         <div class="table-header">
@@ -121,7 +265,7 @@
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div class="table-wrapper">
                             <table class="advisers-table">
                                 <thead>
@@ -145,9 +289,9 @@
                             </table>
                         </div>
                     </div>
-                    
+
                     <!-- SMS Configuration -->
-                    <div class="sms-configuration">
+                    <div class="sms-configuration" id="sms-config">
                         <h3><i class="fas fa-sms"></i> SMS Configuration</h3>
                         <div class="config-content">
                             <div class="config-item">
@@ -157,10 +301,10 @@
                                     <span class="toggle-label">Enable SMS Notifications</span>
                                 </label>
                                 <p class="config-description">
-                                    Send SMS alerts to present advisers when noise level is loud (&gt; 80 dB)
+                                    Send SMS alerts to present advisers when noise level is loud (> 80 dB)
                                 </p>
                             </div>
-                            
+
                             <div class="config-item">
                                 <label>SMS Message Template:</label>
                                 <textarea id="smsTemplate" class="sms-template" rows="3">
@@ -170,7 +314,7 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                                     Use {level} for decibel value and {status} for noise status
                                 </small>
                             </div>
-                            
+
                             <div class="sms-stats">
                                 <div class="stat-card">
                                     <div class="stat-icon">
@@ -181,7 +325,7 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                                         <div class="stat-label">Total SMS Sent</div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="stat-card">
                                     <div class="stat-icon">
                                         <i class="fas fa-user-check"></i>
@@ -196,14 +340,14 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                     </div>
                 </div>
             </div>
-            
+
             <!-- Wall Checker Card -->
-            <div class="dashboard-card">
+            <div class="dashboard-card" id="wall-checker">
                 <div class="card-header">
                     <h2><i class="fas fa-border-style"></i> Wall Checker</h2>
                     <p class="wall-summary">Walls: <span id="wallSummary">2 Concrete, 2 Plywood</span></p>
                 </div>
-                
+
                 <div class="wall-checker-container">
                     <div class="wall-diagram">
                         <div class="room-layout">
@@ -218,14 +362,14 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                                     <span class="wall-type-label">Plywood</span>
                                 </div>
                             </div>
-                            
+
                             <div class="room-center">
                                 <div class="room-content">
                                     <i class="fas fa-microphone-alt"></i>
                                     <span>Noise Sensor</span>
                                 </div>
                             </div>
-                            
+
                             <div class="wall-east wall-item" data-side="east">
                                 <div class="wall-label">East Wall</div>
                                 <div class="wall-toggle-container">
@@ -237,7 +381,7 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                                     <span class="wall-type-label">Plywood</span>
                                 </div>
                             </div>
-                            
+
                             <div class="wall-south wall-item" data-side="south">
                                 <div class="wall-label">South Wall</div>
                                 <div class="wall-toggle-container">
@@ -249,7 +393,7 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                                     <span class="wall-type-label">Plywood</span>
                                 </div>
                             </div>
-                            
+
                             <div class="wall-west wall-item" data-side="west">
                                 <div class="wall-label">West Wall</div>
                                 <div class="wall-toggle-container">
@@ -263,7 +407,7 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="wall-info-section">
                         <div class="wall-stats">
                             <h4><i class="fas fa-chart-pie"></i> Wall Composition</h4>
@@ -282,31 +426,31 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="wall-material-info">
                             <h4><i class="fas fa-info-circle"></i> How Walls Affect Readings</h4>
                             <div class="material-details">
-        <div class="material-item concrete">
-            <div class="material-icon">
-                <i class="fas fa-hard-hat"></i>
-            </div>
-            <div class="material-text">
-                <h5>Concrete Walls</h5>
-                <p>Thick walls keep noise INSIDE. Readings will be <strong>HIGHER</strong> for noise generated in this classroom.</p>
-            </div>
-        </div>
-        <div class="material-item plywood">
-            <div class="material-icon">
-                <i class="fas fa-tree"></i>
-            </div>
-            <div class="material-text">
-                <h5>Plywood Walls</h5>
-                <p>Thin walls let noise ESCAPE. Readings will be <strong>LOWER</strong> for noise generated in this classroom.</p>
-            </div>
-        </div>
-    </div>
+                                <div class="material-item concrete">
+                                    <div class="material-icon">
+                                        <i class="fas fa-hard-hat"></i>
+                                    </div>
+                                    <div class="material-text">
+                                        <h5>Concrete Walls</h5>
+                                        <p>Thick walls keep noise INSIDE. Readings will be <strong>HIGHER</strong> for noise generated in this classroom.</p>
+                                    </div>
+                                </div>
+                                <div class="material-item plywood">
+                                    <div class="material-icon">
+                                        <i class="fas fa-tree"></i>
+                                    </div>
+                                    <div class="material-text">
+                                        <h5>Plywood Walls</h5>
+                                        <p>Thin walls let noise ESCAPE. Readings will be <strong>LOWER</strong> for noise generated in this classroom.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        
+
                         <div class="wall-controls">
                             <button id="setAllConcrete" class="wall-control-btn concrete-btn">
                                 <i class="fas fa-hard-hat"></i> Set All Concrete
@@ -319,21 +463,25 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                 </div>
             </div>
 
-            
-            
             <!-- Recent Readings -->
-            <div class="dashboard-card">
+            <div class="dashboard-card" id="recent-readings">
                 <div class="card-header">
                     <div class="card-header-left">
                         <h2><i class="fas fa-history"></i> Recent Readings</h2>
                     </div>
                     <div class="card-header-right">
+                        <button id="downloadReadingsBtn" class="btn-download">
+                            <i class="fas fa-download"></i> Download as Text
+                        </button>
+                        <button id="printReadingsBtn" class="btn-print">
+                            <i class="fas fa-print"></i> Print Report
+                        </button>
                         <button id="clearReadingsBtn" class="btn-clear">
                             <i class="fas fa-trash-alt"></i> Clear Readings
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="readings-container">
                     <table class="readings-table">
                         <thead>
@@ -352,13 +500,13 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                     </table>
                 </div>
             </div>
-            
+
             <!-- System Controls -->
-            <div class="dashboard-card">
+            <div class="dashboard-card" id="system-controls">
                 <div class="card-header">
                     <h2><i class="fas fa-sliders-h"></i> System Controls</h2>
                 </div>
-                
+
                 <div class="system-controls-container">
                     <div class="controls-grid">
                         <button id="simulateQuiet" class="btn-control quiet">
@@ -374,7 +522,7 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                             <i class="fas fa-play"></i> Auto Simulate
                         </button>
                     </div>
-                    
+
                     <div class="test-section">
                         <div class="test-sms">
                             <h4><i class="fas fa-comment-sms"></i> Test SMS System</h4>
@@ -383,7 +531,7 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                                 <i class="fas fa-paper-plane"></i> Send Test SMS
                             </button>
                         </div>
-                        
+
                         <div class="system-status">
                             <h4><i class="fas fa-info-circle"></i> System Status</h4>
                             <div class="status-items">
@@ -405,25 +553,25 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                 </div>
             </div>
         </main>
-        
+
         <!-- Footer -->
         <footer class="footer">
-            <p>Noise Monitoring System &copy; 2026 | Admin Dashboard</p>
+            <p>Noise Monitoring System © 2026 | Admin Dashboard</p>
             <p class="system-status">
-                Status: <span class="status-active">Active</span> | 
-                SMS: <span id="footerSmsStatus">Enabled</span> | 
+                Status: <span class="status-active">Active</span> |
+                SMS: <span id="footerSmsStatus">Enabled</span> |
                 Advisers: <span id="footerAdviserStatus">0 Present</span> |
                 Walls: <span id="footerWallStatus">Mixed</span>
             </p>
         </footer>
     </div>
-    
+
     <!-- Edit Adviser Modal -->
     <div class="modal-overlay" id="editModalOverlay">
         <div class="modal" id="editModal">
             <div class="modal-header">
                 <h3><i class="fas fa-user-edit"></i> Edit Adviser</h3>
-                <button class="modal-close" id="closeEditModal">&times;</button>
+                <button class="modal-close" id="closeEditModal">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -453,7 +601,7 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
             </div>
         </div>
     </div>
-    
+
     <script src="script1.js"></script>
 </body>
 </html>
