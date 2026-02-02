@@ -76,6 +76,15 @@
                             <div class="sidebar-indicator"></div>
                         </a>
                     </li>
+                    <!-- ADDED: Adviser Schedules Link -->
+                    <li class="sidebar-menu-item">
+                        <a href="#schedule-management" class="sidebar-link" data-section="schedules">
+                            <i class="fas fa-clock"></i>
+                            <span>Adviser Schedules</span>
+                            <span class="sidebar-badge" id="schedulesBadge">0/0</span>
+                            <div class="sidebar-indicator"></div>
+                        </a>
+                    </li>
                     <li class="sidebar-menu-item">
                         <a href="#wall-checker" class="sidebar-link" data-section="walls">
                             <i class="fas fa-border-style"></i>
@@ -334,6 +343,143 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                                         <div class="stat-value" id="activeAdvisers">0</div>
                                         <div class="stat-label">Active Advisers</div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule Management Card -->
+            <div class="dashboard-card" id="schedule-management">
+                <div class="card-header">
+                    <h2><i class="fas fa-clock"></i> Schedule Management</h2>
+                    <div class="schedule-summary">
+                        <span class="summary-item active">
+                            <i class="fas fa-check-circle"></i> <span id="activeSchedulesCount">0</span> Active Schedules
+                        </span>
+                        <span class="summary-item inactive">
+                            <i class="fas fa-clock"></i> <span id="totalSchedulesCount">0</span> Total
+                        </span>
+                    </div>
+                </div>
+
+                <div class="schedule-management-container">
+                    <!-- Add Schedule Form -->
+                    <div class="add-schedule-form">
+                        <h3><i class="fas fa-plus-circle"></i> Add/Edit Schedule</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Select Adviser</label>
+                                <select id="scheduleAdviserSelect" class="form-select">
+                                    <option value="">Select Adviser</option>
+                                    <!-- Advisers will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Day of Week</label>
+                                <select id="scheduleDay" class="form-select">
+                                    <option value="monday">Monday</option>
+                                    <option value="tuesday">Tuesday</option>
+                                    <option value="wednesday">Wednesday</option>
+                                    <option value="thursday">Thursday</option>
+                                    <option value="friday">Friday</option>
+                                    <option value="saturday">Saturday</option>
+                                    <option value="sunday">Sunday</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Start Time</label>
+                                <input type="time" id="scheduleStartTime" class="form-input" value="08:00">
+                            </div>
+                            <div class="form-group">
+                                <label>End Time</label>
+                                <input type="time" id="scheduleEndTime" class="form-input" value="17:00">
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <div class="status-toggle">
+                                    <label class="switch">
+                                        <input type="checkbox" id="scheduleActive" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span class="toggle-label" id="scheduleStatusLabel">Active</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-buttons">
+                            <button id="saveScheduleBtn" class="btn-add">
+                                <i class="fas fa-save"></i> Save Schedule
+                            </button>
+                            <button id="clearScheduleForm" class="btn-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Schedules Table -->
+                    <div class="schedules-table-container">
+                        <div class="table-header">
+                            <h3><i class="fas fa-calendar-alt"></i> Adviser Schedules</h3>
+                            <div class="table-actions">
+                                <button id="activateAllSchedules" class="btn-action">
+                                    <i class="fas fa-toggle-on"></i> Activate All
+                                </button>
+                                <button id="deactivateAllSchedules" class="btn-action">
+                                    <i class="fas fa-toggle-off"></i> Deactivate All
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table class="schedules-table">
+                                <thead>
+                                    <tr>
+                                        <th>Adviser</th>
+                                        <th>Day</th>
+                                        <th>Start</th>
+                                        <th>End</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schedulesTable">
+                                    <!-- Schedules will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Real-time Schedule Status -->
+                    <div class="real-time-status">
+                        <h4><i class="fas fa-hourglass-half"></i> Current Schedule Status</h4>
+                        <div class="status-cards">
+                            <div class="status-card">
+                                <div class="status-icon">
+                                    <i class="fas fa-user-clock"></i>
+                                </div>
+                                <div class="status-content">
+                                    <div class="status-title">Currently Scheduled</div>
+                                    <div class="status-value" id="currentlyScheduled">0</div>
+                                </div>
+                            </div>
+                            <div class="status-card">
+                                <div class="status-icon">
+                                    <i class="fas fa-bell-slash"></i>
+                                </div>
+                                <div class="status-content">
+                                    <div class="status-title">Off Schedule</div>
+                                    <div class="status-value" id="offSchedule">0</div>
+                                </div>
+                            </div>
+                            <div class="status-card">
+                                <div class="status-icon">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <div class="status-content">
+                                    <div class="status-title">Next SMS Window</div>
+                                    <div class="status-value" id="nextSmsWindow">--:--</div>
                                 </div>
                             </div>
                         </div>

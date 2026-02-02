@@ -75,9 +75,28 @@ const sidebarDbValue = document.getElementById('sidebarDbValue');
 const sidebarAdviserCount = document.getElementById('sidebarAdviserCount');
 const readingsCount = document.getElementById('readingsCount');
 const advisersBadge = document.getElementById('advisersBadge');
+const schedulesBadge = document.getElementById('schedulesBadge'); // NEW
 const wallsBadge = document.getElementById('wallsBadge');
 const smsBadge = document.getElementById('smsBadge');
 const quickSimButtons = document.querySelectorAll('.quick-sim-btn');
+
+// Schedule management elements
+const scheduleAdviserSelect = document.getElementById('scheduleAdviserSelect');
+const scheduleDay = document.getElementById('scheduleDay');
+const scheduleStartTime = document.getElementById('scheduleStartTime');
+const scheduleEndTime = document.getElementById('scheduleEndTime');
+const scheduleActive = document.getElementById('scheduleActive');
+const scheduleStatusLabel = document.getElementById('scheduleStatusLabel');
+const saveScheduleBtn = document.getElementById('saveScheduleBtn');
+const clearScheduleForm = document.getElementById('clearScheduleForm');
+const schedulesTable = document.getElementById('schedulesTable');
+const activateAllSchedules = document.getElementById('activateAllSchedules');
+const deactivateAllSchedules = document.getElementById('deactivateAllSchedules');
+const activeSchedulesCount = document.getElementById('activeSchedulesCount');
+const totalSchedulesCount = document.getElementById('totalSchedulesCount');
+const currentlyScheduled = document.getElementById('currentlyScheduled');
+const offSchedule = document.getElementById('offSchedule');
+const nextSmsWindow = document.getElementById('nextSmsWindow');
 
 // ========== STATE VARIABLES ==========
 
@@ -138,6 +157,58 @@ function checkAuth() {
     return true;
 }
 
+// ========== TIME HELPER FUNCTIONS ==========
+
+// Get current day in lowercase (e.g., 'monday')
+function getCurrentDay() {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const now = new Date();
+    return days[now.getDay()];
+}
+
+// Get current time in HH:MM format (24-hour)
+function getCurrentTime() {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
+// Convert time to minutes for comparison (e.g., "08:30" → 510)
+function timeToMinutes(timeString) {
+    if (!timeString) return 0;
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+// Check if current time is within schedule
+function isTimeInRange(currentTime, startTime, endTime) {
+    const currentMinutes = timeToMinutes(currentTime);
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = timeToMinutes(endTime);
+    
+    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+}
+
+// Format time for display
+function formatTimeForDisplay(timeString) {
+    if (!timeString) return '--:--';
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+}
+
+// Get current time with seconds
+function getCurrentTimeWithSeconds() {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+}
+
 // ========== INITIALIZATION ==========
 
 // Initialize everything
@@ -148,11 +219,22 @@ document.addEventListener('DOMContentLoaded', function() {
     updateNoiseDisplay(currentDecibels);
     updateReadingsTable();
     updateAdvisersTable();
+    updateScheduleAdviserDropdown();
+    updateSchedulesTable();
     updateWallUI();
     initializeWallToggles();
     initializeNoiseSimulation();
     initSidebar();
     updateTime();
+    
+    // Initialize event listeners for schedule management
+    initializeScheduleEventListeners();
+    
+    // Start monitoring schedules
+    startScheduleMonitoring();
+    
+    // Add debug button
+    addDebugButton();
 
     setInterval(updateTime, 60000);
 
@@ -257,6 +339,9 @@ function navigateToSection(section) {
         case 'advisers':
             scrollToElement('adviser-management');
             break;
+        case 'schedules':
+            scrollToElement('schedule-management');
+            break;
         case 'walls':
             scrollToElement('wall-checker');
             break;
@@ -337,6 +422,7 @@ function initAutoScrollObserver() {
     const sections = [
         { id: 'current-noise-level', section: 'noise' },
         { id: 'adviser-management', section: 'advisers' },
+        { id: 'schedule-management', section: 'schedules' },
         { id: 'wall-checker', section: 'walls' },
         { id: 'recent-readings', section: 'readings' },
         { id: 'system-controls', section: 'controls' }
@@ -402,6 +488,10 @@ function updateSidebarBadges() {
     const presentAdvisers = advisers.filter(a => a.status === 'present').length;
     advisersBadge.textContent = presentAdvisers;
     sidebarAdviserCount.textContent = presentAdvisers;
+    
+    // Update schedules badge
+    const activeSchedules = teacherSchedules.filter(s => s.isActive).length;
+    schedulesBadge.textContent = `${activeSchedules}/${teacherSchedules.length}`;
     
     // Update wall composition
     const concreteWalls = Object.values(wallState).filter(type => type === 'concrete').length;
@@ -568,8 +658,7 @@ function getRandomDecibels(min, max) {
 
 // Add reading to history
 function addToHistory(originalDecibels, measuredDecibels, status, smsStatus, recipients = [], sessionInfo = '') {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+    const timeString = getCurrentTimeWithSeconds();
 
     const reading = {
         time: timeString,
@@ -595,7 +684,7 @@ function updateReadingsTable() {
     if (readingsHistory.length === 0) {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td colspan="7" style="text-align: center; color: #8b949e;">
+            <td colspan="6" style="text-align: center; color: #8b949e;">
                 No readings yet. Use the controls to simulate noise levels.
             </td>
         `;
@@ -679,6 +768,9 @@ function updateAdvisersTable() {
     adviserSystemStatus.textContent = present > 0 ? 'Active' : 'No Active Advisers';
     adviserSystemStatus.className = present > 0 ? 'status-value' : 'status-value warning';
 
+    // Update schedule dropdown
+    updateScheduleAdviserDropdown();
+
     // Update sidebar
     updateSidebarBadges();
 
@@ -744,7 +836,6 @@ addAdviserBtn.addEventListener('click', function() {
     advisers.push(newAdviser);
     saveAdvisers();
     updateAdvisersTable();
-    updateTeacherDropdown();
 
     // Clear form
     adviserNameInput.value = '';
@@ -798,7 +889,6 @@ saveAdviserBtn.addEventListener('click', function() {
 
     saveAdvisers();
     updateAdvisersTable();
-    updateTeacherDropdown();
     closeEditModalFunc();
     alert('Adviser updated successfully!');
 });
@@ -816,17 +906,22 @@ function deleteAdviser(id) {
     saveAdvisers();
     saveSchedules();
     updateAdvisersTable();
-    updateTeacherDropdown();
     updateSchedulesTable();
-    updateActiveTeachers();
-    alert('Adviser deleted successfully!');
+    alert('Adviser and associated schedules deleted successfully!');
 }
 
 // ========== SMS SYSTEM ==========
 
-// Send SMS to advisers
+// Send SMS to advisers (with schedule check)
 function sendSMS(decibels, status, recipients) {
-    if (!recipients || recipients.length === 0) return false;
+    console.log(`\n=== SMS SENDING PROCESS ===`);
+    console.log(`Time: ${getCurrentTime()}, Day: ${getCurrentDay()}`);
+    console.log(`Recipients: ${recipients.join(', ')}`);
+    
+    if (!recipients || recipients.length === 0) {
+        console.log('SMS blocked: No recipients specified');
+        return false;
+    }
 
     // Check cooldown
     if (smsCooldown.enabled && isOnCooldown()) {
@@ -837,17 +932,37 @@ function sendSMS(decibels, status, recipients) {
     // Filter recipients by schedule and status
     const validRecipients = recipients.filter(recipient => {
         const adviser = advisers.find(a => a.name === recipient);
-        if (!adviser || adviser.status !== 'present') return false;
-
+        
+        if (!adviser) {
+            console.log(`- ${recipient}: Not found in advisers list`);
+            return false;
+        }
+        
+        if (adviser.status !== 'present') {
+            console.log(`- ${recipient}: Status is ${adviser.status} (needs to be present)`);
+            return false;
+        }
+        
         // Check if adviser is scheduled for current time
-        return isTeacherScheduled(adviser.id);
+        const isScheduled = isTeacherScheduled(adviser.id);
+        
+        if (!isScheduled) {
+            console.log(`- ${recipient}: Not scheduled for current time`);
+            return false;
+        }
+        
+        console.log(`- ✓ ${recipient}: Present and scheduled`);
+        return true;
     });
 
+    console.log(`Valid recipients: ${validRecipients.length} out of ${recipients.length}`);
+    
     if (validRecipients.length === 0) {
         console.log('SMS blocked: No valid recipients (not scheduled or not present)');
         return false;
     }
 
+    // Simulate SMS sending (90% success rate)
     const success = Math.random() < 0.9;
 
     if (success) {
@@ -868,11 +983,12 @@ function sendSMS(decibels, status, recipients) {
         saveCooldownSettings();
         saveSmsSessions();
 
-        console.log(`SMS sent to ${validRecipients.length} scheduled/present advisers: "${validRecipients.join(', ')}"`);
+        console.log(`✓ SMS sent to ${validRecipients.length} scheduled/present advisers: "${validRecipients.join(', ')}"`);
         return true;
+    } else {
+        console.log('✗ SMS failed to send (simulated failure)');
+        return false;
     }
-
-    return false;
 }
 
 // Check if system is on cooldown
@@ -900,20 +1016,43 @@ function setCooldown() {
 
 // Check if adviser is scheduled for current time
 function isTeacherScheduled(adviserId) {
-    const now = new Date();
-    const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
-
-    const adviserSchedule = teacherSchedules.find(schedule =>
-        schedule.teacherId === adviserId &&
-        schedule.day === currentDay &&
+    const currentDay = getCurrentDay();
+    const currentTime = getCurrentTime();
+    
+    console.log(`Checking schedule for adviser ${adviserId}:`);
+    console.log(`- Current day: ${currentDay}, Current time: ${currentTime}`);
+    
+    // Find all active schedules for this adviser
+    const activeSchedules = teacherSchedules.filter(schedule => 
+        schedule.teacherId === adviserId && 
         schedule.isActive === true
     );
-
-    if (!adviserSchedule) return false;
-
-    // Check if current time is within schedule
-    return currentTime >= adviserSchedule.startTime && currentTime <= adviserSchedule.endTime;
+    
+    if (activeSchedules.length === 0) {
+        console.log(`- No active schedules found for adviser ${adviserId}`);
+        return false;
+    }
+    
+    // Check each schedule
+    for (const schedule of activeSchedules) {
+        console.log(`- Checking schedule: ${schedule.day} ${schedule.startTime}-${schedule.endTime}`);
+        
+        // Check if day matches
+        if (schedule.day !== currentDay) {
+            continue;
+        }
+        
+        // Check if time is within range
+        const isWithinTime = isTimeInRange(currentTime, schedule.startTime, schedule.endTime);
+        
+        if (isWithinTime) {
+            console.log(`- ✓ Schedule matches! Adviser ${adviserId} is scheduled for current time`);
+            return true;
+        }
+    }
+    
+    console.log(`- ✗ No matching schedule found for current time`);
+    return false;
 }
 
 // Update SMS settings UI
@@ -951,12 +1090,29 @@ smsAllBtn.addEventListener('click', function() {
         return;
     }
 
-    if (confirm(`Send test SMS to ${presentAdvisers.length} present adviser(s)?`)) {
+    // Get current time info for the alert
+    const currentDay = getCurrentDay();
+    const currentTime = getCurrentTime();
+    const currentTimeDisplay = formatTimeForDisplay(currentTime);
+    
+    const message = `Send test SMS to ${presentAdvisers.length} present adviser(s)?\n\n` +
+                   `Current Time: ${currentTimeDisplay}\n` +
+                   `Current Day: ${capitalizeFirst(currentDay)}\n\n` +
+                   `Note: SMS will only be sent to advisers who are:\n` +
+                   `1. Marked as "Present"\n` +
+                   `2. Have an active schedule for ${currentTimeDisplay} on ${capitalizeFirst(currentDay)}`;
+    
+    if (confirm(message)) {
         const success = sendSMS(85, 'Loud (Test)', presentAdvisers.map(a => a.name));
         if (success) {
-            alert(`Test SMS sent to ${presentAdvisers.length} adviser(s)!`);
+            alert(`✓ Test SMS sent successfully!\n\n` +
+                  `Check the Recent Readings table for details on which advisers received the SMS.`);
         } else {
-            alert('Failed to send test SMS. Please try again.');
+            alert(`✗ Failed to send test SMS.\n\n` +
+                  `Possible reasons:\n` +
+                  `• No advisers are scheduled for current time (${currentTimeDisplay})\n` +
+                  `• System is on cooldown\n` +
+                  `• Check console for detailed logs`);
         }
     }
 });
@@ -999,6 +1155,404 @@ function logSmsSession(decibels, status, recipients) {
     }
 
     updateSmsLog();
+}
+
+function updateSmsLog() {
+    // This function updates the SMS log display (if you have one)
+    // Implement based on your needs
+}
+
+// ========== SCHEDULE MANAGEMENT ==========
+
+// Update schedule adviser dropdown
+function updateScheduleAdviserDropdown() {
+    scheduleAdviserSelect.innerHTML = '<option value="">Select Adviser</option>';
+    
+    const presentAdvisers = advisers.filter(adviser => adviser.status === 'present');
+    
+    presentAdvisers.forEach(adviser => {
+        const option = document.createElement('option');
+        option.value = adviser.id;
+        option.textContent = `${adviser.name} (${adviser.subject})`;
+        scheduleAdviserSelect.appendChild(option);
+    });
+}
+
+// Check if schedule has conflicts
+function hasScheduleConflict(adviserId, day, startTime, endTime, excludeScheduleId = null) {
+    const sameDaySchedules = teacherSchedules.filter(schedule => 
+        schedule.teacherId === adviserId && 
+        schedule.day === day &&
+        schedule.id !== excludeScheduleId
+    );
+    
+    for (const schedule of sameDaySchedules) {
+        // Check for time overlap
+        const scheduleStart = schedule.startTime;
+        const scheduleEnd = schedule.endTime;
+        
+        if (
+            (startTime >= scheduleStart && startTime < scheduleEnd) ||
+            (endTime > scheduleStart && endTime <= scheduleEnd) ||
+            (startTime <= scheduleStart && endTime >= scheduleEnd)
+        ) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Add or update schedule
+function saveSchedule() {
+    const adviserId = parseInt(scheduleAdviserSelect.value);
+    const day = scheduleDay.value;
+    const startTime = scheduleStartTime.value;
+    const endTime = scheduleEndTime.value;
+    const isActive = scheduleActive.checked;
+    
+    // Validation
+    if (!adviserId) {
+        alert('Please select an adviser');
+        return;
+    }
+    
+    if (!startTime || !endTime) {
+        alert('Please set both start and end times');
+        return;
+    }
+    
+    if (startTime >= endTime) {
+        alert('End time must be after start time');
+        return;
+    }
+    
+    // Check for schedule conflicts
+    if (hasScheduleConflict(adviserId, day, startTime, endTime, editingScheduleId)) {
+        if (!confirm('This schedule overlaps with an existing schedule. Do you want to continue?')) {
+            return;
+        }
+    }
+    
+    if (editingScheduleId) {
+        // Update existing schedule
+        const scheduleIndex = teacherSchedules.findIndex(s => s.id === editingScheduleId);
+        if (scheduleIndex !== -1) {
+            teacherSchedules[scheduleIndex] = {
+                ...teacherSchedules[scheduleIndex],
+                teacherId: adviserId,
+                day: day,
+                startTime: startTime,
+                endTime: endTime,
+                isActive: isActive
+            };
+        }
+    } else {
+        // Add new schedule
+        const newSchedule = {
+            id: Date.now(),
+            teacherId: adviserId,
+            day: day,
+            startTime: startTime,
+            endTime: endTime,
+            isActive: isActive
+        };
+        
+        teacherSchedules.push(newSchedule);
+    }
+    
+    saveSchedules();
+    updateSchedulesTable();
+    clearScheduleFormFunc();
+    alert('Schedule saved successfully!');
+}
+
+// Update schedules table
+function updateSchedulesTable() {
+    schedulesTable.innerHTML = '';
+    
+    if (teacherSchedules.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="6" class="empty-message">
+                <i class="fas fa-calendar-times"></i>
+                No schedules added yet. Add your first schedule above.
+            </td>
+        `;
+        schedulesTable.appendChild(row);
+    } else {
+        // Sort schedules by day and time
+        const dayOrder = {
+            'monday': 1, 'tuesday': 2, 'wednesday': 3,
+            'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 7
+        };
+        
+        teacherSchedules.sort((a, b) => {
+            if (dayOrder[a.day] !== dayOrder[b.day]) {
+                return dayOrder[a.day] - dayOrder[b.day];
+            }
+            return a.startTime.localeCompare(b.startTime);
+        });
+        
+        teacherSchedules.forEach(schedule => {
+            const adviser = advisers.find(a => a.id === schedule.teacherId);
+            const row = document.createElement('tr');
+            row.dataset.id = schedule.id;
+            
+            // Check if this schedule is currently active
+            const currentDay = getCurrentDay();
+            const currentTime = getCurrentTime();
+            
+            let isCurrent = false;
+            if (schedule.day === currentDay && 
+                isTimeInRange(currentTime, schedule.startTime, schedule.endTime) &&
+                schedule.isActive) {
+                row.classList.add('current-schedule');
+                isCurrent = true;
+            }
+            
+            // Check for overlaps
+            const hasOverlap = hasScheduleConflict(schedule.teacherId, schedule.day, 
+                schedule.startTime, schedule.endTime, schedule.id);
+            if (hasOverlap) {
+                row.classList.add('schedule-overlap');
+            }
+            
+            row.innerHTML = `
+                <td>
+                    <strong>${adviser ? adviser.name : 'Unknown Adviser'}</strong>
+                    ${adviser ? `<div style="font-size: 12px; color: #8b949e;">${adviser.subject}</div>` : ''}
+                    ${adviser ? `<div style="font-size: 11px; color: #58a6ff;">Status: ${adviser.status}</div>` : ''}
+                </td>
+                <td>
+                    <span style="font-weight: 500;">${capitalizeFirst(schedule.day)}</span>
+                    <span class="day-badge ${schedule.day.substring(0, 3)}">
+                        ${schedule.day.substring(0, 3).toUpperCase()}
+                    </span>
+                </td>
+                <td class="time-range" title="24-hour format">
+                    <i class="far fa-clock" style="margin-right: 5px; color: #8b949e;"></i>
+                    ${schedule.startTime}
+                    <div style="font-size: 10px; color: #8b949e;">${formatTimeForDisplay(schedule.startTime)}</div>
+                </td>
+                <td class="time-range" title="24-hour format">
+                    <i class="far fa-clock" style="margin-right: 5px; color: #8b949e;"></i>
+                    ${schedule.endTime}
+                    <div style="font-size: 10px; color: #8b949e;">${formatTimeForDisplay(schedule.endTime)}</div>
+                </td>
+                <td>
+                    <span class="schedule-status ${schedule.isActive ? 'active' : 'inactive'}">
+                        <i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>
+                        ${schedule.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                    <div style="font-size: 10px; color: #8b949e; margin-top: 3px;">
+                        ${getCurrentDay() === schedule.day ? 'Today' : ''}
+                    </div>
+                </td>
+                <td class="schedule-actions">
+                    <button class="btn-edit-schedule" data-id="${schedule.id}" title="Edit Schedule">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn-delete-schedule" data-id="${schedule.id}" title="Delete Schedule">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <button class="btn-toggle-schedule ${schedule.isActive ? '' : 'inactive'}" data-id="${schedule.id}" 
+                            title="${schedule.isActive ? 'Deactivate Schedule' : 'Activate Schedule'}">
+                        <i class="fas fa-power-off"></i> ${schedule.isActive ? 'Deactivate' : 'Activate'}
+                    </button>
+                </td>
+            `;
+            
+            schedulesTable.appendChild(row);
+        });
+    }
+    
+    // Update schedule counts
+    const activeSchedules = teacherSchedules.filter(s => s.isActive).length;
+    activeSchedulesCount.textContent = activeSchedules;
+    totalSchedulesCount.textContent = teacherSchedules.length;
+    
+    // Update schedule statistics
+    updateScheduleStatistics();
+    
+    // Update sidebar badge
+    updateSidebarBadges();
+}
+
+// Update schedule statistics
+function updateScheduleStatistics() {
+    const currentDay = getCurrentDay();
+    const currentTime = getCurrentTime();
+    
+    // Count currently scheduled advisers
+    const currentlyScheduledAdvisers = new Set();
+    
+    teacherSchedules.forEach(schedule => {
+        if (schedule.isActive && 
+            schedule.day === currentDay && 
+            isTimeInRange(currentTime, schedule.startTime, schedule.endTime)) {
+            currentlyScheduledAdvisers.add(schedule.teacherId);
+        }
+    });
+    
+    // Count present advisers who are off-schedule
+    const presentAdvisers = advisers.filter(a => a.status === 'present');
+    const offScheduleAdvisers = presentAdvisers.filter(adviser => {
+        // Check if adviser has any active schedule for current time
+        return !teacherSchedules.some(schedule =>
+            schedule.teacherId === adviser.id &&
+            schedule.isActive &&
+            schedule.day === currentDay &&
+            isTimeInRange(currentTime, schedule.startTime, schedule.endTime)
+        );
+    });
+    
+    currentlyScheduled.textContent = currentlyScheduledAdvisers.size;
+    offSchedule.textContent = offScheduleAdvisers.length;
+    
+    // Calculate next SMS window
+    let nextWindow = '--:--';
+    const currentMinutes = timeToMinutes(currentTime);
+    
+    // Get all future schedule times for today
+    const futureSchedules = teacherSchedules.filter(schedule => {
+        if (!schedule.isActive || schedule.day !== currentDay) return false;
+        
+        const scheduleStartMinutes = timeToMinutes(schedule.startTime);
+        return scheduleStartMinutes > currentMinutes;
+    });
+    
+    if (futureSchedules.length > 0) {
+        // Find the next schedule
+        futureSchedules.sort((a, b) => 
+            timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
+        );
+        
+        nextWindow = formatTimeForDisplay(futureSchedules[0].startTime);
+    }
+    
+    nextSmsWindow.textContent = nextWindow;
+}
+
+// Edit schedule
+function editSchedule(id) {
+    const schedule = teacherSchedules.find(s => s.id === id);
+    if (!schedule) return;
+
+    editingScheduleId = id;
+    scheduleAdviserSelect.value = schedule.teacherId;
+    scheduleDay.value = schedule.day;
+    scheduleStartTime.value = schedule.startTime;
+    scheduleEndTime.value = schedule.endTime;
+    scheduleActive.checked = schedule.isActive;
+    scheduleStatusLabel.textContent = schedule.isActive ? 'Active' : 'Inactive';
+
+    // Scroll to form
+    document.getElementById('schedule-management').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Delete schedule
+function deleteSchedule(id) {
+    if (!confirm('Are you sure you want to delete this schedule?')) return;
+
+    teacherSchedules = teacherSchedules.filter(s => s.id !== id);
+    saveSchedules();
+    updateSchedulesTable();
+    alert('Schedule deleted successfully!');
+}
+
+// Toggle schedule active status
+function toggleSchedule(id) {
+    const schedule = teacherSchedules.find(s => s.id === id);
+    if (!schedule) return;
+
+    schedule.isActive = !schedule.isActive;
+    saveSchedules();
+    updateSchedulesTable();
+
+    const status = schedule.isActive ? 'activated' : 'deactivated';
+    alert(`Schedule ${status} successfully!`);
+}
+
+// Clear schedule form
+function clearScheduleFormFunc() {
+    editingScheduleId = null;
+    scheduleAdviserSelect.value = '';
+    scheduleDay.value = 'monday';
+    scheduleStartTime.value = '08:00';
+    scheduleEndTime.value = '17:00';
+    scheduleActive.checked = true;
+    scheduleStatusLabel.textContent = 'Active';
+}
+
+// Activate all schedules
+function activateAllSchedulesFunc() {
+    if (!confirm('Activate all schedules?')) return;
+
+    teacherSchedules.forEach(schedule => {
+        schedule.isActive = true;
+    });
+
+    saveSchedules();
+    updateSchedulesTable();
+    alert('All schedules activated!');
+}
+
+// Deactivate all schedules
+function deactivateAllSchedulesFunc() {
+    if (!confirm('Deactivate all schedules?')) return;
+
+    teacherSchedules.forEach(schedule => {
+        schedule.isActive = false;
+    });
+
+    saveSchedules();
+    updateSchedulesTable();
+    alert('All schedules deactivated!');
+}
+
+// Update schedule status label
+function updateScheduleStatusLabel() {
+    scheduleStatusLabel.textContent = scheduleActive.checked ? 'Active' : 'Inactive';
+}
+
+// Initialize schedule event listeners
+function initializeScheduleEventListeners() {
+    saveScheduleBtn.addEventListener('click', saveSchedule);
+    clearScheduleForm.addEventListener('click', clearScheduleFormFunc);
+    activateAllSchedules.addEventListener('click', activateAllSchedulesFunc);
+    deactivateAllSchedules.addEventListener('click', deactivateAllSchedulesFunc);
+    scheduleActive.addEventListener('change', updateScheduleStatusLabel);
+
+    // Delegated event listeners for schedule table actions
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-edit-schedule')) {
+            const btn = e.target.closest('.btn-edit-schedule');
+            const id = parseInt(btn.dataset.id);
+            editSchedule(id);
+        }
+        
+        if (e.target.closest('.btn-delete-schedule')) {
+            const btn = e.target.closest('.btn-delete-schedule');
+            const id = parseInt(btn.dataset.id);
+            deleteSchedule(id);
+        }
+        
+        if (e.target.closest('.btn-toggle-schedule')) {
+            const btn = e.target.closest('.btn-toggle-schedule');
+            const id = parseInt(btn.dataset.id);
+            toggleSchedule(id);
+        }
+    });
+}
+
+// Start schedule monitoring
+function startScheduleMonitoring() {
+    // Update schedule statistics immediately
+    updateScheduleStatistics();
+    
+    // Update every minute
+    setInterval(updateScheduleStatistics, 60000);
 }
 
 // ========== WALL CHECKER ==========
@@ -1217,6 +1771,7 @@ function downloadReadingsAsText() {
     text += `Report Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}\n`;
     text += `Current System Status: ${adviserSystemStatus.textContent}\n`;
     text += `Active Advisers: ${presentCount.textContent}\n`;
+    text += `Scheduled Advisers: ${currentlyScheduled.textContent}\n`;
     text += `Wall Composition: ${concreteCount.textContent} Concrete, ${plywoodCount.textContent} Plywood\n`;
     text += `SMS Notifications: ${smsSettings.enabled ? 'Enabled' : 'Disabled'}\n`;
     text += `Total SMS Sent: ${totalSmsSent.textContent}\n\n`;
@@ -1264,6 +1819,7 @@ function downloadReadingsAsText() {
     const smsSent = readingsHistory.filter(r => r.smsStatus === 'Sent').length;
     const smsFailed = readingsHistory.filter(r => r.smsStatus === 'Failed').length;
     const smsOnCooldown = readingsHistory.filter(r => r.smsStatus === 'On Cooldown').length;
+    const smsNoSchedule = readingsHistory.filter(r => r.smsStatus === 'No Scheduled Advisers').length;
 
     text += `Total Readings: ${readingsHistory.length}\n`;
     text += `Quiet Readings: ${quietReadings} (${Math.round((quietReadings / readingsHistory.length) * 100)}%)\n`;
@@ -1273,6 +1829,7 @@ function downloadReadingsAsText() {
     text += `SMS Sent Successfully: ${smsSent}\n`;
     text += `SMS Failed: ${smsFailed}\n`;
     text += `SMS Blocked (Cooldown): ${smsOnCooldown}\n`;
+    text += `SMS Blocked (No Schedule): ${smsNoSchedule}\n`;
 
     // Calculate averages
     const avgOriginal = readingsHistory.reduce((sum, r) => sum + r.originalDecibels, 0) / readingsHistory.length;
@@ -1433,6 +1990,9 @@ function printReadingsReport() {
                         <strong>Active Advisers:</strong> ${presentCount.textContent} Present
                     </div>
                     <div class="info-item">
+                        <strong>Scheduled Advisers:</strong> ${currentlyScheduled.textContent}
+                    </div>
+                    <div class="info-item">
                         <strong>Wall Composition:</strong> ${concreteCount.textContent} Concrete, ${plywoodCount.textContent} Plywood
                     </div>
                     <div class="info-item">
@@ -1440,9 +2000,6 @@ function printReadingsReport() {
                     </div>
                     <div class="info-item">
                         <strong>Total SMS Sent:</strong> ${totalSmsSent.textContent}
-                    </div>
-                    <div class="info-item">
-                        <strong>Noise Adjustment:</strong> ${noiseAdjustment.textContent}
                     </div>
                 </div>
             </div>
@@ -1592,7 +2149,19 @@ testSmsBtn.addEventListener('click', function() {
         return;
     }
 
-    if (confirm(`Send test SMS to ${presentAdvisers.length} present adviser(s)?`)) {
+    // Get current time info for the alert
+    const currentDay = getCurrentDay();
+    const currentTime = getCurrentTime();
+    const currentTimeDisplay = formatTimeForDisplay(currentTime);
+    
+    const message = `Send test SMS to ${presentAdvisers.length} present adviser(s)?\n\n` +
+                   `Current Time: ${currentTimeDisplay}\n` +
+                   `Current Day: ${capitalizeFirst(currentDay)}\n\n` +
+                   `Note: SMS will only be sent to advisers who are:\n` +
+                   `1. Marked as "Present"\n` +
+                   `2. Have an active schedule for ${currentTimeDisplay} on ${capitalizeFirst(currentDay)}`;
+    
+    if (confirm(message)) {
         const originalText = testSmsBtn.innerHTML;
         testSmsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
         testSmsBtn.disabled = true;
@@ -1601,9 +2170,14 @@ testSmsBtn.addEventListener('click', function() {
             const success = sendSMS(85, 'Loud (Test)', presentAdvisers.map(a => a.name));
 
             if (success) {
-                alert(`Test SMS sent to ${presentAdvisers.length} adviser(s)!`);
+                alert(`✓ Test SMS sent successfully!\n\n` +
+                      `Check the Recent Readings table for details on which advisers received the SMS.`);
             } else {
-                alert('Failed to send test SMS. Please check SIM800L connection.');
+                alert(`✗ Failed to send test SMS.\n\n` +
+                      `Possible reasons:\n` +
+                      `• No advisers are scheduled for current time (${currentTimeDisplay})\n` +
+                      `• System is on cooldown\n` +
+                      `• Check console for detailed logs`);
             }
 
             testSmsBtn.innerHTML = originalText;
@@ -1697,35 +2271,28 @@ function loadSavedState() {
         teacherSchedules = JSON.parse(savedSchedules);
     } else {
         // Add sample schedules
+        const now = new Date();
+        const currentHour = now.getHours().toString().padStart(2, '0');
+        const currentMinute = now.getMinutes().toString().padStart(2, '0');
+        const currentTime = `${currentHour}:${currentMinute}`;
+        const nextHour = (now.getHours() + 1) % 24;
+        const endTime = `${nextHour.toString().padStart(2, '0')}:${currentMinute}`;
+        
         teacherSchedules = [
             {
                 id: 1,
                 teacherId: 1,
-                teacherName: "Dr. Maria Santos",
-                day: "monday",
-                startTime: "08:00",
-                endTime: "12:00",
-                subject: "Physics",
+                day: getCurrentDay(),
+                startTime: currentTime,
+                endTime: endTime,
                 isActive: true
             },
             {
                 id: 2,
-                teacherId: 1,
-                teacherName: "Dr. Maria Santos",
-                day: "wednesday",
-                startTime: "13:00",
-                endTime: "17:00",
-                subject: "Advanced Physics",
-                isActive: true
-            },
-            {
-                id: 3,
                 teacherId: 3,
-                teacherName: "Engr. Robert Lim",
-                day: "monday",
-                startTime: "08:00",
-                endTime: "17:00",
-                subject: "Computer Science",
+                day: getCurrentDay(),
+                startTime: currentTime,
+                endTime: endTime,
                 isActive: true
             }
         ];
@@ -1747,10 +2314,7 @@ function loadSavedState() {
     // Update UI
     updateSmsSettingsUI();
     updateCooldownUI();
-    updateTeacherDropdown();
-    updateSchedulesTable();
-    updateActiveTeachers();
-    updateSmsLog();
+    updateScheduleStatistics();
 }
 
 // Save functions
@@ -1788,30 +2352,30 @@ function saveWallState() {
 
 // ========== HELPER FUNCTIONS ==========
 
-// Update teacher dropdown
-function updateTeacherDropdown() {
-    // This function is called but not needed in current version
-}
-
-// Update schedules table
-function updateSchedulesTable() {
-    // This function is called but not needed in current version
-}
-
-// Update active teachers display
-function updateActiveTeachers() {
-    // This function is called but not needed in current version
-}
-
-// Update SMS log table
-function updateSmsLog() {
-    // This function is called but not needed in current version
-}
-
 // Helper function to capitalize first letter
 function capitalizeFirst(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+// Debug function to check all schedules
+function debugSchedules() {
+    console.log('\n=== SCHEDULE DEBUG INFO ===');
+    console.log(`Current Time: ${getCurrentTime()} (${formatTimeForDisplay(getCurrentTime())})`);
+    console.log(`Current Day: ${getCurrentDay()}`);
+    console.log(`\nActive Schedules:`);
+    
+    teacherSchedules.forEach((schedule, index) => {
+        const adviser = advisers.find(a => a.id === schedule.teacherId);
+        console.log(`${index + 1}. ${adviser ? adviser.name : 'Unknown'} - ${schedule.day} ${schedule.startTime}-${schedule.endTime} (${schedule.isActive ? 'Active' : 'Inactive'})`);
+    });
+    
+    console.log(`\nPresent Advisers:`);
+    advisers.filter(a => a.status === 'present').forEach((adviser, index) => {
+        const schedules = teacherSchedules.filter(s => s.teacherId === adviser.id && s.isActive);
+        console.log(`${index + 1}. ${adviser.name} - ${schedules.length} active schedule(s)`);
+    });
+}
+
 
 // ========== KEYBOARD SHORTCUTS ==========
 
