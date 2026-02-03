@@ -11,6 +11,14 @@ const clearReadingsBtn = document.getElementById('clearReadingsBtn');
 const downloadReadingsBtn = document.getElementById('downloadReadingsBtn');
 const printReadingsBtn = document.getElementById('printReadingsBtn');
 
+// System Power Elements
+const systemPowerToggle = document.getElementById('systemPowerToggle');
+const powerStatus = document.getElementById('powerStatus');
+const headerSystemStatus = document.getElementById('headerSystemStatus');
+const headerStatusDot = document.getElementById('headerStatusDot');
+const systemPowerStatus = document.getElementById('systemPowerStatus');
+const footerSystemStatus = document.getElementById('footerSystemStatus');
+
 // Adviser management elements
 const presentCount = document.getElementById('presentCount');
 const onLeaveCount = document.getElementById('onLeaveCount');
@@ -75,7 +83,7 @@ const sidebarDbValue = document.getElementById('sidebarDbValue');
 const sidebarAdviserCount = document.getElementById('sidebarAdviserCount');
 const readingsCount = document.getElementById('readingsCount');
 const advisersBadge = document.getElementById('advisersBadge');
-const schedulesBadge = document.getElementById('schedulesBadge'); // NEW
+const schedulesBadge = document.getElementById('schedulesBadge');
 const wallsBadge = document.getElementById('wallsBadge');
 const smsBadge = document.getElementById('smsBadge');
 const quickSimButtons = document.querySelectorAll('.quick-sim-btn');
@@ -107,6 +115,9 @@ let autoSimulateInterval = null;
 let readingsHistory = [];
 let editingAdviserId = null;
 let smsCooldownTimer = null;
+
+// System Power state
+let isSystemOn = true;
 
 // Adviser management state
 let advisers = [];
@@ -209,6 +220,186 @@ function getCurrentTimeWithSeconds() {
     return `${hours}:${minutes}:${seconds}`;
 }
 
+// ========== SYSTEM POWER MANAGEMENT ==========
+
+// Initialize system power
+function initializeSystemPower() {
+    // Load saved system power state
+    const savedSystemPower = localStorage.getItem('systemPower');
+    if (savedSystemPower !== null) {
+        isSystemOn = savedSystemPower === 'true';
+    }
+    
+    // Update UI based on saved state
+    updateSystemPowerUI();
+    
+    // Add event listener for system power toggle
+    systemPowerToggle.addEventListener('change', function() {
+        toggleSystemPower(this.checked);
+    });
+}
+
+// Toggle system power
+function toggleSystemPower(isOn) {
+    isSystemOn = isOn;
+    
+    // Save state
+    localStorage.setItem('systemPower', isSystemOn.toString());
+    
+    // Update UI
+    updateSystemPowerUI();
+    
+    // If turning system off, stop auto simulation
+    if (!isSystemOn && isAutoSimulating) {
+        stopAutoSimulation();
+    }
+    
+    // Add system status reading
+    addSystemStatusReading();
+    
+    // Log action
+    console.log(`System ${isSystemOn ? 'turned ON' : 'turned OFF'}`);
+}
+
+// Update system power UI
+function updateSystemPowerUI() {
+    // Update toggle state
+    systemPowerToggle.checked = isSystemOn;
+    
+    // Update sidebar power status
+    const powerStatusElement = document.getElementById('powerStatus');
+    if (isSystemOn) {
+        powerStatusElement.innerHTML = '<i class="fas fa-plug"></i><span>System is ON</span>';
+        powerStatusElement.className = 'power-status system-on';
+        headerSystemStatus.textContent = 'System: ON';
+        headerSystemStatus.parentElement.classList.remove('system-off');
+        headerStatusDot.className = 'status-dot active';
+        systemPowerStatus.textContent = 'ON';
+        systemPowerStatus.className = 'status-value';
+        footerSystemStatus.textContent = 'ON';
+        footerSystemStatus.className = 'status-active';
+    } else {
+        powerStatusElement.innerHTML = '<i class="fas fa-power-off"></i><span>System is OFF</span>';
+        powerStatusElement.className = 'power-status system-off';
+        headerSystemStatus.textContent = 'System: OFF';
+        headerSystemStatus.parentElement.classList.add('system-off');
+        headerStatusDot.className = 'status-dot inactive';
+        systemPowerStatus.textContent = 'OFF';
+        systemPowerStatus.className = 'status-value error';
+        footerSystemStatus.textContent = 'OFF';
+        footerSystemStatus.className = 'status-inactive';
+    }
+    
+    // Update noise display when system is off
+    if (!isSystemOn) {
+        decibelValue.textContent = '-- dB';
+        decibelValue.className = 'decibel-value color-system-off';
+        noiseStatus.textContent = 'System OFF';
+        noiseStatus.className = 'noise-status system-off';
+        indicatorFill.style.width = '0%';
+        sidebarDbValue.textContent = '-- dB';
+        sidebarDbValue.className = 'sidebar-stat-value';
+    }
+    
+    // Enable/disable controls
+    updateControlStates();
+}
+
+// Update control states based on system power
+function updateControlStates() {
+    const simulationButtons = [simulateQuietBtn, simulateModerateBtn, simulateLoudBtn, autoSimulateBtn];
+    const quickSimButtons = document.querySelectorAll('.quick-sim-btn');
+    const systemControls = [testSmsBtn, smsAllBtn, addAdviserBtn, saveScheduleBtn, 
+                           activateAllSchedules, deactivateAllSchedules, clearReadingsBtn,
+                           downloadReadingsBtn, printReadingsBtn];
+    
+    // Disable/enable simulation buttons
+    simulationButtons.forEach(btn => {
+        if (btn) {
+            btn.disabled = !isSystemOn;
+            btn.classList.toggle('system-disabled', !isSystemOn);
+        }
+    });
+    
+    // Disable/enable quick simulation buttons
+    quickSimButtons.forEach(btn => {
+        if (btn) {
+            btn.disabled = !isSystemOn;
+        }
+    });
+    
+    // Disable/enable other system controls
+    systemControls.forEach(btn => {
+        if (btn) {
+            btn.disabled = !isSystemOn;
+        }
+    });
+    
+    // Disable/enable form inputs
+    const formInputs = [adviserNameInput, adviserSubjectInput, adviserNumberInput, 
+                       adviserStatusSelect, scheduleAdviserSelect, scheduleDay,
+                       scheduleStartTime, scheduleEndTime, scheduleActive];
+    
+    formInputs.forEach(input => {
+        if (input) {
+            input.disabled = !isSystemOn;
+        }
+    });
+    
+    // Disable/enable SMS toggle
+    if (enableSmsToggle) {
+        enableSmsToggle.disabled = !isSystemOn;
+    }
+    
+    // Disable/enable SMS template
+    if (smsTemplate) {
+        smsTemplate.disabled = !isSystemOn;
+    }
+    
+    // Disable/enable wall toggles
+    const wallToggles = [wallNorthToggle, wallEastToggle, wallSouthToggle, wallWestToggle];
+    wallToggles.forEach(toggle => {
+        if (toggle) {
+            toggle.disabled = !isSystemOn;
+        }
+    });
+    
+    // Disable/enable wall control buttons
+    const wallButtons = [setAllConcreteBtn, setAllPlywoodBtn];
+    wallButtons.forEach(btn => {
+        if (btn) {
+            btn.disabled = !isSystemOn;
+        }
+    });
+    
+    // Update dashboard card appearance
+    const dashboardCards = document.querySelectorAll('.dashboard-card');
+    dashboardCards.forEach(card => {
+        card.classList.toggle('system-disabled', !isSystemOn);
+    });
+}
+
+// Add system status reading to history
+function addSystemStatusReading() {
+    const timeString = getCurrentTimeWithSeconds();
+    
+    const reading = {
+        time: timeString,
+        originalDecibels: 0,
+        measuredDecibels: 0,
+        status: 'System ' + (isSystemOn ? 'ON' : 'OFF'),
+        smsStatus: 'N/A',
+        recipients: [],
+        sessionInfo: isSystemOn ? 'System activated' : 'System deactivated',
+        wallComposition: `${concreteCount.textContent}C/${plywoodCount.textContent}P`,
+        isSystemEvent: true
+    };
+    
+    readingsHistory.unshift(reading);
+    if (readingsHistory.length > 10) readingsHistory.pop();
+    updateReadingsTable();
+}
+
 // ========== INITIALIZATION ==========
 
 // Initialize everything
@@ -216,6 +407,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!checkAuth()) return;
 
     loadSavedState();
+    initializeSystemPower();
     updateNoiseDisplay(currentDecibels);
     updateReadingsTable();
     updateAdvisersTable();
@@ -233,9 +425,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Start monitoring schedules
     startScheduleMonitoring();
     
-    // Add debug button
-    addDebugButton();
-
     setInterval(updateTime, 60000);
 
     console.log('Dashboard initialized successfully');
@@ -276,6 +465,7 @@ function initSidebar() {
     // Add event listeners to quick simulation buttons
     quickSimButtons.forEach(btn => {
         btn.addEventListener('click', function() {
+            if (!isSystemOn) return;
             const level = this.dataset.level;
             triggerQuickSimulation(level);
         });
@@ -353,7 +543,7 @@ function navigateToSection(section) {
             break;
         case 'simulation':
             // Toggle auto simulation
-            if (!isAutoSimulating) {
+            if (!isAutoSimulating && isSystemOn) {
                 autoSimulateBtn.click();
             }
             break;
@@ -373,6 +563,11 @@ function navigateToSection(section) {
 
 // Trigger quick simulation from sidebar
 function triggerQuickSimulation(level) {
+    if (!isSystemOn) {
+        console.log('System is OFF, ignoring quick sim');
+        return;
+    }
+    
     if (isAutoSimulating) {
         console.log('Auto simulation is running, ignoring quick sim');
         return;
@@ -482,7 +677,8 @@ function updateAutoScrollUI() {
 // Update sidebar badges
 function updateSidebarBadges() {
     // Update readings count
-    readingsCount.textContent = readingsHistory.length;
+    const regularReadings = readingsHistory.filter(r => !r.isSystemEvent).length;
+    readingsCount.textContent = regularReadings;
     
     // Update adviser count
     const presentAdvisers = advisers.filter(a => a.status === 'present').length;
@@ -513,7 +709,7 @@ function updateSidebarNoiseValue(decibels, status) {
         sidebarDbValue.classList.add('color-quiet');
     } else if (status === 'Moderate') {
         sidebarDbValue.classList.add('color-moderate');
-    } else {
+    } else if (status === 'Loud') {
         sidebarDbValue.classList.add('color-loud');
     }
 }
@@ -531,6 +727,12 @@ function updateTime() {
 // Update noise display based on decibel level
 function updateNoiseDisplay(decibels) {
     console.log(`Updating noise display with: ${decibels} dB`);
+
+    // Check if system is on
+    if (!isSystemOn) {
+        console.log('System is OFF, ignoring noise update');
+        return;
+    }
 
     currentDecibels = decibels;
 
@@ -583,7 +785,7 @@ function updateNoiseDisplay(decibels) {
     let smsRecipients = [];
     let sessionInfo = '';
 
-    if (shouldSendSms && smsSettings.enabled) {
+    if (shouldSendSms && smsSettings.enabled && isSystemOn) {
         const presentAdvisers = advisers.filter(a => a.status === 'present');
         if (presentAdvisers.length > 0) {
             // Check cooldown first
@@ -613,6 +815,9 @@ function updateNoiseDisplay(decibels) {
     } else if (!smsSettings.enabled) {
         smsStatusText = 'Disabled';
         sessionInfo = 'SMS disabled';
+    } else if (!isSystemOn) {
+        smsStatusText = 'System OFF';
+        sessionInfo = 'System is turned off';
     }
 
     // Update reading history with session info
@@ -694,6 +899,26 @@ function updateReadingsTable() {
 
     readingsHistory.forEach(reading => {
         const row = document.createElement('tr');
+
+        // Handle system event readings differently
+        if (reading.isSystemEvent) {
+            row.innerHTML = `
+                <td>${reading.time}</td>
+                <td colspan="2" style="text-align: center; color: #58a6ff; font-weight: 500;">
+                    <i class="fas fa-power-off"></i> ${reading.sessionInfo}
+                </td>
+                <td>
+                    <span class="status-badge ${reading.status.toLowerCase().includes('on') ? 'quiet' : 'loud'}">
+                        ${reading.status}
+                    </span>
+                </td>
+                <td colspan="2" style="text-align: center; color: #8b949e;">
+                    System Event
+                </td>
+            `;
+            readingsTable.appendChild(row);
+            return;
+        }
 
         const statusClass = reading.status.toLowerCase();
         const statusBadge = `<span class="status-badge ${statusClass}">${reading.status}</span>`;
@@ -785,10 +1010,10 @@ function updateAdvisersTable() {
             <td>${adviser.number}</td>
             <td><span class="adviser-status ${adviser.status}">${adviser.status.charAt(0).toUpperCase() + adviser.status.slice(1)}</span></td>
             <td class="adviser-actions">
-                <button class="btn-edit" data-id="${adviser.id}">
+                <button class="btn-edit" data-id="${adviser.id}" ${!isSystemOn ? 'disabled' : ''}>
                     <i class="fas fa-edit"></i> Edit
                 </button>
-                <button class="btn-delete" data-id="${adviser.id}">
+                <button class="btn-delete" data-id="${adviser.id}" ${!isSystemOn ? 'disabled' : ''}>
                     <i class="fas fa-trash"></i> Delete
                 </button>
             </td>
@@ -800,6 +1025,7 @@ function updateAdvisersTable() {
     // Add event listeners to action buttons
     document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', function() {
+            if (!isSystemOn) return;
             const id = parseInt(this.dataset.id);
             openEditModal(id);
         });
@@ -807,6 +1033,7 @@ function updateAdvisersTable() {
 
     document.querySelectorAll('.btn-delete').forEach(btn => {
         btn.addEventListener('click', function() {
+            if (!isSystemOn) return;
             const id = parseInt(this.dataset.id);
             deleteAdviser(id);
         });
@@ -815,6 +1042,11 @@ function updateAdvisersTable() {
 
 // Add new adviser
 addAdviserBtn.addEventListener('click', function() {
+    if (!isSystemOn) {
+        alert('System is OFF. Turn on the system to add advisers.');
+        return;
+    }
+
     const name = adviserNameInput.value.trim();
     const subject = adviserSubjectInput.value.trim();
     const number = adviserNumberInput.value.trim();
@@ -850,6 +1082,8 @@ addAdviserBtn.addEventListener('click', function() {
 
 // Open edit modal
 function openEditModal(id) {
+    if (!isSystemOn) return;
+
     const adviser = advisers.find(a => a.id === id);
     if (!adviser) return;
 
@@ -874,6 +1108,8 @@ function closeEditModalFunc() {
 
 // Save edited adviser
 saveAdviserBtn.addEventListener('click', function() {
+    if (!isSystemOn) return;
+
     if (!editingAdviserId) return;
 
     const adviserIndex = advisers.findIndex(a => a.id === editingAdviserId);
@@ -895,6 +1131,11 @@ saveAdviserBtn.addEventListener('click', function() {
 
 // Delete adviser
 function deleteAdviser(id) {
+    if (!isSystemOn) {
+        alert('System is OFF. Turn on the system to delete advisers.');
+        return;
+    }
+
     if (!confirm('Are you sure you want to delete this adviser?')) return;
 
     // Remove adviser
@@ -920,6 +1161,12 @@ function sendSMS(decibels, status, recipients) {
     
     if (!recipients || recipients.length === 0) {
         console.log('SMS blocked: No recipients specified');
+        return false;
+    }
+
+    // Check if system is on
+    if (!isSystemOn) {
+        console.log('SMS blocked: System is OFF');
         return false;
     }
 
@@ -1071,6 +1318,12 @@ function updateSmsSettingsUI() {
 
 // Enable SMS toggle
 enableSmsToggle.addEventListener('change', function() {
+    if (!isSystemOn) {
+        this.checked = !this.checked; // Revert the change
+        alert('System is OFF. Turn on the system to change SMS settings.');
+        return;
+    }
+    
     smsSettings.enabled = this.checked;
     saveSmsSettings();
     updateSmsSettingsUI();
@@ -1078,12 +1331,19 @@ enableSmsToggle.addEventListener('change', function() {
 
 // SMS template change
 smsTemplate.addEventListener('change', function() {
+    if (!isSystemOn) return;
+    
     smsSettings.template = this.value;
     saveSmsSettings();
 });
 
 // Broadcast SMS to all present advisers
 smsAllBtn.addEventListener('click', function() {
+    if (!isSystemOn) {
+        alert('System is OFF. Turn on the system to send SMS.');
+        return;
+    }
+
     const presentAdvisers = advisers.filter(a => a.status === 'present');
     if (presentAdvisers.length === 0) {
         alert('No present advisers to send SMS to');
@@ -1205,6 +1465,11 @@ function hasScheduleConflict(adviserId, day, startTime, endTime, excludeSchedule
 
 // Add or update schedule
 function saveSchedule() {
+    if (!isSystemOn) {
+        alert('System is OFF. Turn on the system to save schedules.');
+        return;
+    }
+
     const adviserId = parseInt(scheduleAdviserSelect.value);
     const day = scheduleDay.value;
     const startTime = scheduleStartTime.value;
@@ -1350,14 +1615,14 @@ function updateSchedulesTable() {
                     </div>
                 </td>
                 <td class="schedule-actions">
-                    <button class="btn-edit-schedule" data-id="${schedule.id}" title="Edit Schedule">
+                    <button class="btn-edit-schedule" data-id="${schedule.id}" title="Edit Schedule" ${!isSystemOn ? 'disabled' : ''}>
                         <i class="fas fa-edit"></i> Edit
                     </button>
-                    <button class="btn-delete-schedule" data-id="${schedule.id}" title="Delete Schedule">
+                    <button class="btn-delete-schedule" data-id="${schedule.id}" title="Delete Schedule" ${!isSystemOn ? 'disabled' : ''}>
                         <i class="fas fa-trash"></i> Delete
                     </button>
                     <button class="btn-toggle-schedule ${schedule.isActive ? '' : 'inactive'}" data-id="${schedule.id}" 
-                            title="${schedule.isActive ? 'Deactivate Schedule' : 'Activate Schedule'}">
+                            title="${schedule.isActive ? 'Deactivate Schedule' : 'Activate Schedule'}" ${!isSystemOn ? 'disabled' : ''}>
                         <i class="fas fa-power-off"></i> ${schedule.isActive ? 'Deactivate' : 'Activate'}
                     </button>
                 </td>
@@ -1436,6 +1701,8 @@ function updateScheduleStatistics() {
 
 // Edit schedule
 function editSchedule(id) {
+    if (!isSystemOn) return;
+
     const schedule = teacherSchedules.find(s => s.id === id);
     if (!schedule) return;
 
@@ -1453,6 +1720,11 @@ function editSchedule(id) {
 
 // Delete schedule
 function deleteSchedule(id) {
+    if (!isSystemOn) {
+        alert('System is OFF. Turn on the system to delete schedules.');
+        return;
+    }
+
     if (!confirm('Are you sure you want to delete this schedule?')) return;
 
     teacherSchedules = teacherSchedules.filter(s => s.id !== id);
@@ -1463,6 +1735,11 @@ function deleteSchedule(id) {
 
 // Toggle schedule active status
 function toggleSchedule(id) {
+    if (!isSystemOn) {
+        alert('System is OFF. Turn on the system to toggle schedules.');
+        return;
+    }
+
     const schedule = teacherSchedules.find(s => s.id === id);
     if (!schedule) return;
 
@@ -1487,6 +1764,11 @@ function clearScheduleFormFunc() {
 
 // Activate all schedules
 function activateAllSchedulesFunc() {
+    if (!isSystemOn) {
+        alert('System is OFF. Turn on the system to activate schedules.');
+        return;
+    }
+
     if (!confirm('Activate all schedules?')) return;
 
     teacherSchedules.forEach(schedule => {
@@ -1500,6 +1782,11 @@ function activateAllSchedulesFunc() {
 
 // Deactivate all schedules
 function deactivateAllSchedulesFunc() {
+    if (!isSystemOn) {
+        alert('System is OFF. Turn on the system to deactivate schedules.');
+        return;
+    }
+
     if (!confirm('Deactivate all schedules?')) return;
 
     teacherSchedules.forEach(schedule => {
@@ -1628,6 +1915,11 @@ function initializeWallToggles() {
 
     // Add fresh event listeners
     wallNorthToggle.addEventListener('change', function() {
+        if (!isSystemOn) {
+            this.checked = !this.checked; // Revert the change
+            alert('System is OFF. Turn on the system to change wall settings.');
+            return;
+        }
         console.log('North wall toggle changed');
         wallState.north = this.checked ? 'plywood' : 'concrete';
         updateWallUI();
@@ -1635,6 +1927,11 @@ function initializeWallToggles() {
     });
 
     wallEastToggle.addEventListener('change', function() {
+        if (!isSystemOn) {
+            this.checked = !this.checked; // Revert the change
+            alert('System is OFF. Turn on the system to change wall settings.');
+            return;
+        }
         console.log('East wall toggle changed');
         wallState.east = this.checked ? 'plywood' : 'concrete';
         updateWallUI();
@@ -1642,6 +1939,11 @@ function initializeWallToggles() {
     });
 
     wallSouthToggle.addEventListener('change', function() {
+        if (!isSystemOn) {
+            this.checked = !this.checked; // Revert the change
+            alert('System is OFF. Turn on the system to change wall settings.');
+            return;
+        }
         console.log('South wall toggle changed');
         wallState.south = this.checked ? 'plywood' : 'concrete';
         updateWallUI();
@@ -1649,6 +1951,11 @@ function initializeWallToggles() {
     });
 
     wallWestToggle.addEventListener('change', function() {
+        if (!isSystemOn) {
+            this.checked = !this.checked; // Revert the change
+            alert('System is OFF. Turn on the system to change wall settings.');
+            return;
+        }
         console.log('West wall toggle changed');
         wallState.west = this.checked ? 'plywood' : 'concrete';
         updateWallUI();
@@ -1657,6 +1964,10 @@ function initializeWallToggles() {
 
     // Set all concrete/plywood
     setAllConcreteBtn.addEventListener('click', function() {
+        if (!isSystemOn) {
+            alert('System is OFF. Turn on the system to change wall settings.');
+            return;
+        }
         console.log('Setting all walls to concrete');
         wallState.north = 'concrete';
         wallState.east = 'concrete';
@@ -1667,6 +1978,10 @@ function initializeWallToggles() {
     });
 
     setAllPlywoodBtn.addEventListener('click', function() {
+        if (!isSystemOn) {
+            alert('System is OFF. Turn on the system to change wall settings.');
+            return;
+        }
         console.log('Setting all walls to plywood');
         wallState.north = 'plywood';
         wallState.east = 'plywood';
@@ -1679,6 +1994,18 @@ function initializeWallToggles() {
 
 // ========== SIMULATION CONTROLS ==========
 
+// Stop auto simulation
+function stopAutoSimulation() {
+    isAutoSimulating = false;
+    if (autoSimulateInterval) {
+        clearInterval(autoSimulateInterval);
+        autoSimulateInterval = null;
+    }
+    autoSimulateBtn.innerHTML = '<i class="fas fa-play"></i> Auto Simulate';
+    autoSimulateBtn.classList.remove('active');
+    console.log('Stopped auto simulation');
+}
+
 // Initialize noise simulation event listeners
 function initializeNoiseSimulation() {
     console.log('Initializing noise simulation buttons');
@@ -1687,6 +2014,10 @@ function initializeNoiseSimulation() {
     simulateQuietBtn.addEventListener('click', function(e) {
         console.log('Quiet simulation clicked');
         e.stopPropagation();
+        if (!isSystemOn) {
+            alert('System is OFF. Turn on the system to simulate noise.');
+            return;
+        }
         if (isAutoSimulating) {
             console.log('Auto simulation is running, ignoring manual click');
             return;
@@ -1699,6 +2030,10 @@ function initializeNoiseSimulation() {
     simulateModerateBtn.addEventListener('click', function(e) {
         console.log('Moderate simulation clicked');
         e.stopPropagation();
+        if (!isSystemOn) {
+            alert('System is OFF. Turn on the system to simulate noise.');
+            return;
+        }
         if (isAutoSimulating) {
             console.log('Auto simulation is running, ignoring manual click');
             return;
@@ -1711,6 +2046,10 @@ function initializeNoiseSimulation() {
     simulateLoudBtn.addEventListener('click', function(e) {
         console.log('Loud simulation clicked');
         e.stopPropagation();
+        if (!isSystemOn) {
+            alert('System is OFF. Turn on the system to simulate noise.');
+            return;
+        }
         if (isAutoSimulating) {
             console.log('Auto simulation is running, ignoring manual click');
             return;
@@ -1723,6 +2062,10 @@ function initializeNoiseSimulation() {
     autoSimulateBtn.addEventListener('click', function(e) {
         console.log('Auto simulate clicked');
         e.stopPropagation();
+        if (!isSystemOn) {
+            alert('System is OFF. Turn on the system to use auto simulation.');
+            return;
+        }
         if (!isAutoSimulating) {
             isAutoSimulating = true;
             autoSimulateBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Auto Simulate';
@@ -1745,11 +2088,7 @@ function initializeNoiseSimulation() {
                 updateNoiseDisplay(newDecibels);
             }, 3000);
         } else {
-            isAutoSimulating = false;
-            clearInterval(autoSimulateInterval);
-            autoSimulateBtn.innerHTML = '<i class="fas fa-play"></i> Auto Simulate';
-            autoSimulateBtn.classList.remove('active');
-            console.log('Stopped auto simulation');
+            stopAutoSimulation();
         }
     });
 }
@@ -1769,6 +2108,7 @@ function downloadReadingsAsText() {
     // System Information
     const now = new Date();
     text += `Report Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}\n`;
+    text += `System Status: ${isSystemOn ? 'ON' : 'OFF'}\n`;
     text += `Current System Status: ${adviserSystemStatus.textContent}\n`;
     text += `Active Advisers: ${presentCount.textContent}\n`;
     text += `Scheduled Advisers: ${currentlyScheduled.textContent}\n`;
@@ -1783,7 +2123,10 @@ function downloadReadingsAsText() {
     text += 'Time\t\tSource dB\tMeasured dB\tStatus\t\tSMS Status\tRecipients\n';
     text += '─'.repeat(100) + '\n';
 
-    readingsHistory.forEach((reading, index) => {
+    // Filter out system events for the main table
+    const regularReadings = readingsHistory.filter(r => !r.isSystemEvent);
+    
+    regularReadings.forEach((reading, index) => {
         const time = reading.time.padEnd(10, ' ');
         const source = `${reading.originalDecibels} dB`.padEnd(12, ' ');
         const measured = `${reading.measuredDecibels} dB`.padEnd(14, ' ');
@@ -1801,7 +2144,7 @@ function downloadReadingsAsText() {
         }
 
         // Add separator every 3 readings
-        if ((index + 1) % 3 === 0 && index !== readingsHistory.length - 1) {
+        if ((index + 1) % 3 === 0 && index !== regularReadings.length - 1) {
             text += '─'.repeat(100) + '\n';
         }
     });
@@ -1812,19 +2155,19 @@ function downloadReadingsAsText() {
     text += 'SUMMARY STATISTICS\n';
     text += '='.repeat(50) + '\n';
 
-    const quietReadings = readingsHistory.filter(r => r.status === 'Quiet').length;
-    const moderateReadings = readingsHistory.filter(r => r.status === 'Moderate').length;
-    const loudReadings = readingsHistory.filter(r => r.status === 'Loud').length;
+    const quietReadings = regularReadings.filter(r => r.status === 'Quiet').length;
+    const moderateReadings = regularReadings.filter(r => r.status === 'Moderate').length;
+    const loudReadings = regularReadings.filter(r => r.status === 'Loud').length;
 
-    const smsSent = readingsHistory.filter(r => r.smsStatus === 'Sent').length;
-    const smsFailed = readingsHistory.filter(r => r.smsStatus === 'Failed').length;
-    const smsOnCooldown = readingsHistory.filter(r => r.smsStatus === 'On Cooldown').length;
-    const smsNoSchedule = readingsHistory.filter(r => r.smsStatus === 'No Scheduled Advisers').length;
+    const smsSent = regularReadings.filter(r => r.smsStatus === 'Sent').length;
+    const smsFailed = regularReadings.filter(r => r.smsStatus === 'Failed').length;
+    const smsOnCooldown = regularReadings.filter(r => r.smsStatus === 'On Cooldown').length;
+    const smsNoSchedule = regularReadings.filter(r => r.smsStatus === 'No Scheduled Advisers').length;
 
-    text += `Total Readings: ${readingsHistory.length}\n`;
-    text += `Quiet Readings: ${quietReadings} (${Math.round((quietReadings / readingsHistory.length) * 100)}%)\n`;
-    text += `Moderate Readings: ${moderateReadings} (${Math.round((moderateReadings / readingsHistory.length) * 100)}%)\n`;
-    text += `Loud Readings: ${loudReadings} (${Math.round((loudReadings / readingsHistory.length) * 100)}%)\n\n`;
+    text += `Total Readings: ${regularReadings.length}\n`;
+    text += `Quiet Readings: ${quietReadings} (${regularReadings.length > 0 ? Math.round((quietReadings / regularReadings.length) * 100) : 0}%)\n`;
+    text += `Moderate Readings: ${moderateReadings} (${regularReadings.length > 0 ? Math.round((moderateReadings / regularReadings.length) * 100) : 0}%)\n`;
+    text += `Loud Readings: ${loudReadings} (${regularReadings.length > 0 ? Math.round((loudReadings / regularReadings.length) * 100) : 0}%)\n\n`;
 
     text += `SMS Sent Successfully: ${smsSent}\n`;
     text += `SMS Failed: ${smsFailed}\n`;
@@ -1832,9 +2175,15 @@ function downloadReadingsAsText() {
     text += `SMS Blocked (No Schedule): ${smsNoSchedule}\n`;
 
     // Calculate averages
-    const avgOriginal = readingsHistory.reduce((sum, r) => sum + r.originalDecibels, 0) / readingsHistory.length;
-    const avgMeasured = readingsHistory.reduce((sum, r) => sum + r.measuredDecibels, 0) / readingsHistory.length;
-    const avgAdjustment = readingsHistory.reduce((sum, r) => sum + (r.measuredDecibels - r.originalDecibels), 0) / readingsHistory.length;
+    let avgOriginal = 0;
+    let avgMeasured = 0;
+    let avgAdjustment = 0;
+    
+    if (regularReadings.length > 0) {
+        avgOriginal = regularReadings.reduce((sum, r) => sum + r.originalDecibels, 0) / regularReadings.length;
+        avgMeasured = regularReadings.reduce((sum, r) => sum + r.measuredDecibels, 0) / regularReadings.length;
+        avgAdjustment = regularReadings.reduce((sum, r) => sum + (r.measuredDecibels - r.originalDecibels), 0) / regularReadings.length;
+    }
 
     text += `\nAverage Source dB: ${avgOriginal.toFixed(2)}\n`;
     text += `Average Measured dB: ${avgMeasured.toFixed(2)}\n`;
@@ -1867,6 +2216,25 @@ function printReadingsReport() {
 
     const now = new Date();
     const printWindow = window.open('', '_blank');
+
+    // Filter out system events for the main table
+    const regularReadings = readingsHistory.filter(r => !r.isSystemEvent);
+    
+    // Calculate statistics
+    const quietReadings = regularReadings.filter(r => r.status === 'Quiet').length;
+    const moderateReadings = regularReadings.filter(r => r.status === 'Moderate').length;
+    const loudReadings = regularReadings.filter(r => r.status === 'Loud').length;
+
+    const smsSent = regularReadings.filter(r => r.smsStatus === 'Sent').length;
+    const smsFailed = regularReadings.filter(r => r.smsStatus === 'Failed').length;
+    const smsOnCooldown = regularReadings.filter(r => r.smsStatus === 'On Cooldown').length;
+
+    const avgOriginal = regularReadings.length > 0 
+        ? regularReadings.reduce((sum, r) => sum + r.originalDecibels, 0) / regularReadings.length 
+        : 0;
+    const avgMeasured = regularReadings.length > 0 
+        ? regularReadings.reduce((sum, r) => sum + r.measuredDecibels, 0) / regularReadings.length 
+        : 0;
 
     let html = `
         <!DOCTYPE html>
@@ -1984,7 +2352,10 @@ function printReadingsReport() {
                 <h2>System Information</h2>
                 <div class="info-grid">
                     <div class="info-item">
-                        <strong>System Status:</strong> ${adviserSystemStatus.textContent}
+                        <strong>System Status:</strong> ${isSystemOn ? 'ON' : 'OFF'}
+                    </div>
+                    <div class="info-item">
+                        <strong>System Power:</strong> ${adviserSystemStatus.textContent}
                     </div>
                     <div class="info-item">
                         <strong>Active Advisers:</strong> ${presentCount.textContent} Present
@@ -2005,7 +2376,13 @@ function printReadingsReport() {
             </div>
 
             <div class="section">
-                <h2>Recent Readings (${readingsHistory.length} records)</h2>
+                <h2>Recent Readings (${regularReadings.length} records)</h2>
+    `;
+
+    if (regularReadings.length === 0) {
+        html += `<p style="text-align: center; color: #7f8c8d; padding: 20px;">No regular readings available.</p>`;
+    } else {
+        html += `
                 <table>
                     <thead>
                         <tr>
@@ -2018,50 +2395,38 @@ function printReadingsReport() {
                         </tr>
                     </thead>
                     <tbody>
-    `;
-
-    readingsHistory.forEach(reading => {
-        const statusClass = `status-${reading.status.toLowerCase()}`;
-        let smsClass = '';
-        if (reading.smsStatus === 'Sent') smsClass = 'sms-sent';
-        else if (reading.smsStatus === 'Failed') smsClass = 'sms-failed';
-        else if (reading.smsStatus === 'On Cooldown') smsClass = 'sms-cooldown';
-
-        html += `
-            <tr>
-                <td>${reading.time}</td>
-                <td>${reading.originalDecibels} dB</td>
-                <td>${reading.measuredDecibels} dB</td>
-                <td class="${statusClass}">${reading.status}</td>
-                <td class="${smsClass}">${reading.smsStatus}</td>
-                <td>${reading.recipients.length > 0 ? reading.recipients.join(', ') : 'None'}</td>
-            </tr>
         `;
 
-        if (reading.sessionInfo) {
+        regularReadings.forEach(reading => {
+            const statusClass = `status-${reading.status.toLowerCase()}`;
+            let smsClass = '';
+            if (reading.smsStatus === 'Sent') smsClass = 'sms-sent';
+            else if (reading.smsStatus === 'Failed') smsClass = 'sms-failed';
+            else if (reading.smsStatus === 'On Cooldown') smsClass = 'sms-cooldown';
+
             html += `
                 <tr>
-                    <td colspan="6" style="font-size: 12px; color: #666; padding-left: 30px;">
-                        <em>Session Info:</em> ${reading.sessionInfo}
-                    </td>
+                    <td>${reading.time}</td>
+                    <td>${reading.originalDecibels} dB</td>
+                    <td>${reading.measuredDecibels} dB</td>
+                    <td class="${statusClass}">${reading.status}</td>
+                    <td class="${smsClass}">${reading.smsStatus}</td>
+                    <td>${reading.recipients.length > 0 ? reading.recipients.join(', ') : 'None'}</td>
                 </tr>
             `;
-        }
-    });
 
-    // Calculate statistics
-    const quietReadings = readingsHistory.filter(r => r.status === 'Quiet').length;
-    const moderateReadings = readingsHistory.filter(r => r.status === 'Moderate').length;
-    const loudReadings = readingsHistory.filter(r => r.status === 'Loud').length;
+            if (reading.sessionInfo) {
+                html += `
+                    <tr>
+                        <td colspan="6" style="font-size: 12px; color: #666; padding-left: 30px;">
+                            <em>Session Info:</em> ${reading.sessionInfo}
+                        </td>
+                    </tr>
+                `;
+            }
+        });
 
-    const smsSent = readingsHistory.filter(r => r.smsStatus === 'Sent').length;
-    const smsFailed = readingsHistory.filter(r => r.smsStatus === 'Failed').length;
-    const smsOnCooldown = readingsHistory.filter(r => r.smsStatus === 'On Cooldown').length;
-
-    const avgOriginal = readingsHistory.reduce((sum, r) => sum + r.originalDecibels, 0) / readingsHistory.length;
-    const avgMeasured = readingsHistory.reduce((sum, r) => sum + r.measuredDecibels, 0) / readingsHistory.length;
-
-    html += `
+        html += `
                     </tbody>
                 </table>
             </div>
@@ -2072,17 +2437,17 @@ function printReadingsReport() {
                     <div class="summary-item summary-quiet">
                         <div style="font-size: 24px; font-weight: bold;">${quietReadings}</div>
                         <div>Quiet Readings</div>
-                        <div>${Math.round((quietReadings / readingsHistory.length) * 100)}%</div>
+                        <div>${regularReadings.length > 0 ? Math.round((quietReadings / regularReadings.length) * 100) : 0}%</div>
                     </div>
                     <div class="summary-item summary-moderate">
                         <div style="font-size: 24px; font-weight: bold;">${moderateReadings}</div>
                         <div>Moderate Readings</div>
-                        <div>${Math.round((moderateReadings / readingsHistory.length) * 100)}%</div>
+                        <div>${regularReadings.length > 0 ? Math.round((moderateReadings / regularReadings.length) * 100) : 0}%</div>
                     </div>
                     <div class="summary-item summary-loud">
                         <div style="font-size: 24px; font-weight: bold;">${loudReadings}</div>
                         <div>Loud Readings</div>
-                        <div>${Math.round((loudReadings / readingsHistory.length) * 100)}%</div>
+                        <div>${regularReadings.length > 0 ? Math.round((loudReadings / regularReadings.length) * 100) : 0}%</div>
                     </div>
                 </div>
 
@@ -2105,7 +2470,10 @@ function printReadingsReport() {
                     </div>
                 </div>
             </div>
+        `;
+    }
 
+    html += `
             <div class="footer">
                 <p>Noise Monitoring System © ${now.getFullYear()} | Admin Dashboard Report</p>
                 <p>This report was automatically generated by the Noise Monitoring System.</p>
@@ -2133,6 +2501,11 @@ function printReadingsReport() {
 
 // Clear recent readings
 clearReadingsBtn.addEventListener('click', function() {
+    if (!isSystemOn) {
+        alert('System is OFF. Turn on the system to clear readings.');
+        return;
+    }
+
     if (confirm('Are you sure you want to clear all recent readings?')) {
         readingsHistory = [];
         updateReadingsTable();
@@ -2143,6 +2516,11 @@ clearReadingsBtn.addEventListener('click', function() {
 
 // Test SMS button
 testSmsBtn.addEventListener('click', function() {
+    if (!isSystemOn) {
+        alert('System is OFF. Turn on the system to send test SMS.');
+        return;
+    }
+
     const presentAdvisers = advisers.filter(a => a.status === 'present');
     if (presentAdvisers.length === 0) {
         alert('No present advisers to send test SMS to');
@@ -2197,9 +2575,9 @@ editModalOverlay.addEventListener('click', function(e) {
 logoutBtn.addEventListener('click', function() {
     if (confirm('Are you sure you want to logout?')) {
         localStorage.removeItem('isLoggedIn');
-        if (isAutoSimulating) {
-            clearInterval(autoSimulateInterval);
-            isAutoSimulating = false;
+        stopAutoSimulation();
+        if (smsCooldownTimer) {
+            clearInterval(smsCooldownTimer);
         }
         window.location.href = 'index.html';
     }
@@ -2213,6 +2591,12 @@ printReadingsBtn.addEventListener('click', printReadingsReport);
 
 // Load saved state from localStorage
 function loadSavedState() {
+    // Load system power state
+    const savedSystemPower = localStorage.getItem('systemPower');
+    if (savedSystemPower !== null) {
+        isSystemOn = savedSystemPower === 'true';
+    }
+    
     // Load noise monitoring state
     const savedState = localStorage.getItem('noiseMonitorState');
     if (savedState) {
@@ -2350,6 +2734,10 @@ function saveWallState() {
     localStorage.setItem('wallCheckerState', JSON.stringify(wallState));
 }
 
+function saveSystemPower() {
+    localStorage.setItem('systemPower', isSystemOn.toString());
+}
+
 // ========== HELPER FUNCTIONS ==========
 
 // Helper function to capitalize first letter
@@ -2376,26 +2764,25 @@ function debugSchedules() {
     });
 }
 
-
 // ========== KEYBOARD SHORTCUTS ==========
 
 // Keyboard shortcuts
 document.addEventListener('keydown', function(event) {
-    if (isAutoSimulating) return;
+    if (!isSystemOn) return;
 
     switch(event.key) {
         case '1':
-            simulateQuietBtn.click();
+            if (!isAutoSimulating) simulateQuietBtn.click();
             break;
         case '2':
-            simulateModerateBtn.click();
+            if (!isAutoSimulating) simulateModerateBtn.click();
             break;
         case '3':
-            simulateLoudBtn.click();
+            if (!isAutoSimulating) simulateLoudBtn.click();
             break;
         case ' ':
             event.preventDefault();
-            autoSimulateBtn.click();
+            if (!isAutoSimulating) autoSimulateBtn.click();
             break;
         case 'Escape':
             if (editModalOverlay.classList.contains('active')) {
@@ -2428,6 +2815,13 @@ document.addEventListener('keydown', function(event) {
                 alert(`Auto-scroll ${isAutoScrollEnabled ? 'enabled' : 'disabled'}`);
             }
             break;
+        case 'o':
+            if (event.ctrlKey && event.shiftKey) {
+                event.preventDefault();
+                systemPowerToggle.click();
+                alert(`System ${systemPowerToggle.checked ? 'turned ON' : 'turned OFF'}`);
+            }
+            break;
     }
 });
 
@@ -2442,7 +2836,8 @@ window.addEventListener('load', function() {
               'Ctrl+D = Download readings\n' +
               'Ctrl+P = Print report\n' +
               'Ctrl+B = Toggle sidebar\n' +
-              'Ctrl+Shift+A = Toggle auto-scroll');
+              'Ctrl+Shift+A = Toggle auto-scroll\n' +
+              'Ctrl+Shift+O = Toggle system power');
     }, 1000);
 });
 

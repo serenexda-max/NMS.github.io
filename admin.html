@@ -35,6 +35,27 @@
             </div>
         </div>
 
+        <!-- System Power Control -->
+        <div class="sidebar-section">
+            <h4 class="sidebar-section-title">System Control</h4>
+            <div class="system-power-control">
+                <div class="power-toggle-container">
+                    <span class="power-status-label">SYSTEM POWER</span>
+                    <label class="power-toggle">
+                        <input type="checkbox" id="systemPowerToggle">
+                        <span class="power-toggle-slider">
+                            <span class="power-toggle-text off">OFF</span>
+                            <span class="power-toggle-text on">ON</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="power-status" id="powerStatus">
+                    <i class="fas fa-plug"></i>
+                    <span>System is ON</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Navigation Menu -->
         <nav class="sidebar-nav">
             <div class="sidebar-section">
@@ -76,7 +97,6 @@
                             <div class="sidebar-indicator"></div>
                         </a>
                     </li>
-                    <!-- ADDED: Adviser Schedules Link -->
                     <li class="sidebar-menu-item">
                         <a href="#schedule-management" class="sidebar-link" data-section="schedules">
                             <i class="fas fa-clock"></i>
@@ -169,6 +189,12 @@
                 <p class="subtitle">Admin Dashboard</p>
             </div>
             <div class="header-right">
+                <div class="system-status-header">
+                    <div class="system-status-indicator">
+                        <span class="status-dot active" id="headerStatusDot"></span>
+                        <span id="headerSystemStatus">System: ON</span>
+                    </div>
+                </div>
                 <div class="user-info">
                     <i class="fas fa-user-circle"></i>
                     <span>Administrator</span>
@@ -190,7 +216,7 @@
 
                 <div class="noise-level-display">
                     <div class="decibel-value" id="decibelValue">-- dB</div>
-                    <div class="noise-status" id="noiseStatus">Waiting for data...</div>
+                    <div class="noise-status" id="noiseStatus">System OFF</div>
                 </div>
 
                 <div class="noise-indicator">
@@ -287,7 +313,6 @@
                                     </tr>
                                 </thead>
                                 <tbody id="advisersTable">
-                                    <!-- Advisers will be populated by JavaScript -->
                                     <tr class="empty-row">
                                         <td colspan="5" class="empty-message">
                                             <i class="fas fa-user-slash"></i>
@@ -373,7 +398,6 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                                 <label>Select Adviser</label>
                                 <select id="scheduleAdviserSelect" class="form-select">
                                     <option value="">Select Adviser</option>
-                                    <!-- Advisers will be populated by JavaScript -->
                                 </select>
                             </div>
                             <div class="form-group">
@@ -445,7 +469,6 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                                     </tr>
                                 </thead>
                                 <tbody id="schedulesTable">
-                                    <!-- Schedules will be populated by JavaScript -->
                                 </tbody>
                             </table>
                         </div>
@@ -641,7 +664,6 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                             </tr>
                         </thead>
                         <tbody id="readingsTable">
-                            <!-- Data will be populated by JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -682,6 +704,10 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
                             <h4><i class="fas fa-info-circle"></i> System Status</h4>
                             <div class="status-items">
                                 <div class="status-item">
+                                    <span class="status-label">System Power:</span>
+                                    <span class="status-value" id="systemPowerStatus">ON</span>
+                                </div>
+                                <div class="status-item">
                                     <span class="status-label">SIM800L:</span>
                                     <span class="status-value" id="sim800lStatus">Ready</span>
                                 </div>
@@ -704,7 +730,7 @@ URGENT: High noise level detected in your classroom. Current level: {level} dB (
         <footer class="footer">
             <p>Noise Monitoring System © 2026 | Admin Dashboard</p>
             <p class="system-status">
-                Status: <span class="status-active">Active</span> |
+                System: <span id="footerSystemStatus">ON</span> |
                 SMS: <span id="footerSmsStatus">Enabled</span> |
                 Advisers: <span id="footerAdviserStatus">0 Present</span> |
                 Walls: <span id="footerWallStatus">Mixed</span>
