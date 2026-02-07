@@ -3153,3 +3153,956 @@ input:checked + .slider:before {
     background-color: rgba(139, 148, 158, 0.15);
     color: #8b949e;
 }
+
+/* ========== MOBILE RESPONSIVENESS FIXES ========== */
+
+/* Base mobile-first adjustments */
+@media (max-width: 1200px) {
+    .container.sidebar-active .main-content {
+        margin-left: 0 !important;
+    }
+    
+    .main-content {
+        grid-template-columns: 1fr !important;
+        grid-template-areas: 
+            "noise"
+            "adviser"
+            "schedule"
+            "wall"
+            "readings"
+            "controls" !important;
+    }
+}
+
+/* Mobile specific styles (up to 768px) */
+@media (max-width: 768px) {
+    /* Fix body overflow */
+    body {
+        overflow-x: hidden;
+    }
+    
+    /* Container adjustments */
+    .container {
+        width: 100%;
+        padding: 0;
+    }
+    
+    /* Header fixes */
+    .header {
+        padding: 15px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .header-left {
+        width: 100%;
+    }
+    
+    .header-left h1 {
+        font-size: 20px;
+    }
+    
+    .header-left .subtitle {
+        font-size: 12px;
+    }
+    
+    .header-right {
+        width: 100%;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    
+    .system-status-header {
+        order: 2;
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .user-info {
+        order: 1;
+        font-size: 14px;
+    }
+    
+    .btn-logout {
+        order: 3;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    
+    /* Main content fixes */
+    .main-content {
+        padding: 15px;
+        gap: 15px;
+    }
+    
+    /* Dashboard card fixes */
+    .dashboard-card {
+        padding: 15px;
+        width: 100%;
+        margin: 0;
+        border-radius: 8px;
+    }
+    
+    .dashboard-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    /* Card header fixes */
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .card-header h2 {
+        font-size: 18px;
+    }
+    
+    .card-header-left, .card-header-right {
+        width: 100%;
+    }
+    
+    .card-header-right {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    /* Noise level display fixes */
+    .noise-level-display {
+        margin-bottom: 20px;
+    }
+    
+    .decibel-value {
+        font-size: 48px;
+    }
+    
+    .noise-status {
+        font-size: 18px;
+    }
+    
+    /* Form layouts */
+    .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+    }
+    
+    .form-group {
+        width: 100%;
+    }
+    
+    /* Adviser management fixes */
+    .adviser-summary {
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+    
+    .summary-item {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .adviser-management-container {
+        gap: 15px;
+    }
+    
+    /* Table fixes for mobile */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -15px;
+        padding: 0 15px;
+        width: calc(100% + 30px);
+    }
+    
+    .advisers-table, .schedules-table, .readings-table {
+        min-width: 600px;
+    }
+    
+    .table-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 15px;
+    }
+    
+    .table-header h3 {
+        font-size: 16px;
+    }
+    
+    /* Schedule management fixes */
+    .add-schedule-form .form-row {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .form-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .form-buttons button {
+        width: 100%;
+    }
+    
+    .status-cards {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+    }
+    
+    /* Wall checker fixes */
+    .wall-checker-container {
+        gap: 15px;
+    }
+    
+    .wall-diagram {
+        padding: 10px;
+    }
+    
+    .room-layout {
+        height: 250px;
+    }
+    
+    .wall-label {
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+    
+    .wall-type-label {
+        font-size: 10px;
+        min-width: 50px;
+    }
+    
+    .wall-toggle-slider {
+        width: 40px;
+        height: 22px;
+    }
+    
+    .wall-toggle-slider:before {
+        height: 14px;
+        width: 14px;
+    }
+    
+    .wall-controls {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .wall-control-btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    /* System controls fixes */
+    .controls-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .test-section {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .btn-control {
+        padding: 15px;
+        font-size: 14px;
+    }
+    
+    /* Footer fixes */
+    .footer {
+        padding: 15px;
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .system-status {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    /* Button sizing fixes */
+    .btn-add, .btn-action, .btn-secondary, .btn-primary,
+    .btn-download, .btn-print, .btn-clear, .btn-test-sms {
+        padding: 10px 15px;
+        font-size: 13px;
+    }
+    
+    .btn-edit, .btn-delete, 
+    .btn-edit-schedule, .btn-delete-schedule, .btn-toggle-schedule {
+        padding: 6px 10px;
+        font-size: 11px;
+        min-width: 60px;
+    }
+    
+    /* Modal fixes */
+    .modal {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .modal-body {
+        padding: 15px;
+    }
+    
+    .modal-footer {
+        padding: 15px;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .modal-footer button {
+        width: 100%;
+    }
+    
+    /* SMS configuration fixes */
+    .sms-stats {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .stat-card {
+        padding: 12px;
+    }
+    
+    .stat-value {
+        font-size: 20px;
+    }
+    
+    /* Sidebar toggle button positioning */
+    .sidebar-toggle {
+        top: 10px;
+        left: 10px;
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+    
+    /* Sidebar mobile improvements */
+    .sidebar {
+        width: 280px;
+    }
+    
+    .sidebar.active {
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Quick simulation buttons */
+    .quick-sim-buttons {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        padding: 0 15px;
+    }
+    
+    .quick-sim-btn {
+        height: 36px;
+        font-size: 14px;
+    }
+    
+    /* Stats in sidebar */
+    .sidebar-stats {
+        margin: 10px 15px;
+        padding: 10px;
+    }
+    
+    /* Last updated text */
+    .last-updated {
+        font-size: 12px;
+    }
+    
+    /* Action buttons in tables */
+    .adviser-actions, .schedule-actions {
+        flex-wrap: nowrap;
+        gap: 5px;
+    }
+    
+    /* Empty state messages */
+    .empty-message {
+        padding: 30px 10px;
+        font-size: 13px;
+    }
+    
+    /* Threshold info */
+    .threshold-info {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    /* Material details in wall checker */
+    .material-details {
+        gap: 10px;
+    }
+    
+    .material-item {
+        padding: 10px;
+    }
+    
+    .material-icon {
+        font-size: 20px;
+    }
+    
+    .material-text h5 {
+        font-size: 14px;
+    }
+    
+    .material-text p {
+        font-size: 12px;
+    }
+    
+    /* Real-time status */
+    .status-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .status-card {
+        padding: 12px;
+    }
+    
+    /* Reading adjustments for mobile */
+    .reading-adjustment {
+        padding: 10px;
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
+    }
+}
+
+/* Small mobile devices (up to 480px) */
+@media (max-width: 480px) {
+    /* Further size reductions */
+    .decibel-value {
+        font-size: 36px;
+    }
+    
+    .noise-status {
+        font-size: 16px;
+    }
+    
+    .sidebar {
+        width: 100%;
+    }
+    
+    .sidebar-header {
+        padding: 15px;
+    }
+    
+    .sidebar-nav {
+        padding: 0 15px;
+    }
+    
+    .sidebar-section {
+        margin-bottom: 20px;
+    }
+    
+    .sidebar-link {
+        padding: 10px;
+    }
+    
+    /* Button text adjustments */
+    .btn-logout span {
+        display: none;
+    }
+    
+    .btn-logout i {
+        margin: 0;
+    }
+    
+    .btn-logout {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Table actions - hide text, show only icons */
+    .btn-edit span, .btn-delete span,
+    .btn-edit-schedule span, .btn-delete-schedule span, .btn-toggle-schedule span {
+        display: none;
+    }
+    
+    .btn-edit, .btn-delete,
+    .btn-edit-schedule, .btn-delete-schedule, .btn-toggle-schedule {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: auto;
+    }
+    
+    /* Header user info */
+    .user-info span {
+        display: none;
+    }
+    
+    .user-info {
+        width: 36px;
+        height: 36px;
+        justify-content: center;
+    }
+    
+    /* System status header */
+    .system-status-indicator span {
+        display: none;
+    }
+    
+    .system-status-indicator {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        justify-content: center;
+    }
+    
+    /* Card header buttons */
+    .btn-download, .btn-print, .btn-clear,
+    .btn-action, .btn-add {
+        flex: 1;
+        min-width: 0;
+        justify-content: center;
+    }
+    
+    .btn-download span, .btn-print span, .btn-clear span,
+    .btn-action span, .btn-add span {
+        font-size: 11px;
+    }
+    
+    /* Quick sim buttons */
+    .quick-sim-btn {
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    /* SMS template */
+    .sms-template {
+        font-size: 13px;
+        padding: 10px;
+    }
+    
+    /* Form inputs */
+    .form-input, .form-select {
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    /* Modal improvements */
+    .modal {
+        margin: 5px;
+        width: calc(100% - 10px);
+    }
+    
+    /* Reading table adjustments */
+    .readings-table th:nth-child(6),
+    .readings-table td:nth-child(6) {
+        max-width: 100px;
+    }
+    
+    /* Wall diagram size */
+    .room-layout {
+        height: 200px;
+    }
+    
+    .room-content {
+        font-size: 12px;
+    }
+    
+    .room-content i {
+        font-size: 24px;
+    }
+}
+
+/* Tablet specific adjustments (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .main-content {
+        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-areas: 
+            "noise adviser"
+            "schedule wall"
+            "readings readings"
+            "controls controls" !important;
+        gap: 20px;
+    }
+    
+    .dashboard-card {
+        padding: 20px;
+    }
+    
+    .form-row {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .add-schedule-form .form-row {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .status-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Landscape orientation fixes */
+@media (max-height: 600px) and (orientation: landscape) {
+    .main-content {
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    .dashboard-card {
+        padding: 12px;
+    }
+    
+    .noise-level-display {
+        margin-bottom: 10px;
+    }
+    
+    .decibel-value {
+        font-size: 32px;
+    }
+    
+    .indicator-bar {
+        height: 20px;
+    }
+    
+    /* Reduce vertical spacing */
+    .adviser-management-container,
+    .schedule-management-container,
+    .wall-checker-container {
+        gap: 12px;
+    }
+}
+
+/* Fix for iOS Safari */
+@supports (-webkit-touch-callout: none) {
+    /* Prevent elastic scrolling on body */
+    body {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .container {
+        height: 100vh;
+        height: -webkit-fill-available;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Fix for 100vh issue in iOS */
+    .sidebar {
+        height: 100vh;
+        height: -webkit-fill-available;
+    }
+    
+    .main-content {
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+    }
+}
+
+/* Fix for Android Chrome */
+@supports not (-webkit-touch-callout: none) {
+    body {
+        min-height: 100vh;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    /* Increase touch target sizes */
+    .sidebar-link, 
+    .btn-control,
+    .btn-add,
+    .btn-action,
+    .btn-secondary,
+    .btn-primary,
+    .btn-download,
+    .btn-print,
+    .btn-clear,
+    .btn-test-sms,
+    .btn-edit,
+    .btn-delete,
+    .btn-edit-schedule,
+    .btn-delete-schedule,
+    .btn-toggle-schedule,
+    .wall-control-btn,
+    .quick-sim-btn {
+        min-height: 44px;
+        padding: 12px 16px;
+    }
+    
+    /* Form inputs */
+    .form-input, 
+    .form-select,
+    .modal-input,
+    .modal-select {
+        min-height: 44px;
+    }
+    
+    /* Toggle switches */
+    .power-toggle,
+    .wall-toggle,
+    .config-toggle,
+    .switch {
+        min-width: 60px;
+        min-height: 44px;
+    }
+    
+    /* Reduce hover effects for touch */
+    *:hover {
+        transform: none !important;
+    }
+    
+    /* Active state instead of hover */
+    .sidebar-link:active,
+    .btn-control:active,
+    .btn-add:active,
+    .btn-action:active,
+    .btn-secondary:active,
+    .btn-primary:active,
+    .btn-download:active,
+    .btn-print:active,
+    .btn-clear:active,
+    .btn-test-sms:active,
+    .btn-edit:active,
+    .btn-delete:active,
+    .btn-edit-schedule:active,
+    .btn-delete-schedule:active,
+    .btn-toggle-schedule:active,
+    .wall-control-btn:active,
+    .quick-sim-btn:active {
+        opacity: 0.7;
+        transform: scale(0.98) !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .dashboard-card {
+        border: 2px solid #ffffff;
+    }
+    
+    .sidebar {
+        border-right: 2px solid #ffffff;
+    }
+    
+    .header {
+        border-bottom: 2px solid #ffffff;
+    }
+    
+    .btn-control, .btn-add, .btn-action, .btn-secondary, .btn-primary,
+    .btn-download, .btn-print, .btn-clear, .btn-test-sms {
+        border: 2px solid currentColor;
+    }
+    
+    .status-badge, .adviser-status, .schedule-status {
+        border: 1px solid currentColor;
+    }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .status-dot.active {
+        animation: none;
+    }
+}
+
+/* Dark mode adjustments (already dark, but ensure consistency) */
+@media (prefers-color-scheme: dark) {
+    /* Ensure our dark theme overrides any system preferences */
+    .dashboard-card,
+    .sidebar,
+    .header,
+    .footer {
+        background-color: #161b22 !important;
+    }
+    
+    body {
+        background-color: #0d1117 !important;
+        color: #e6edf3 !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .sidebar,
+    .sidebar-toggle,
+    .header,
+    .footer,
+    .btn-control,
+    .btn-add,
+    .btn-action,
+    .btn-secondary,
+    .btn-primary,
+    .btn-download,
+    .btn-print,
+    .btn-clear,
+    .btn-test-sms,
+    .btn-edit,
+    .btn-delete,
+    .btn-edit-schedule,
+    .btn-delete-schedule,
+    .btn-toggle-schedule,
+    .wall-control-btn,
+    .quick-sim-btn,
+    .modal-overlay {
+        display: none !important;
+    }
+    
+    .container {
+        padding: 0;
+    }
+    
+    .main-content {
+        grid-template-columns: 1fr !important;
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .dashboard-card {
+        break-inside: avoid;
+        border: 1px solid #000;
+        box-shadow: none;
+    }
+    
+    body {
+        background-color: white !important;
+        color: black !important;
+    }
+    
+    .decibel-value,
+    .noise-status,
+    .dashboard-card h2,
+    .dashboard-card h3,
+    .dashboard-card h4 {
+        color: black !important;
+    }
+    
+    .threshold-text,
+    .material-text p,
+    .config-description,
+    .template-help {
+        color: #666 !important;
+    }
+}
+
+/* Ensure proper stacking context */
+.container {
+    position: relative;
+    z-index: 1;
+}
+
+.sidebar {
+    z-index: 1000;
+}
+
+.sidebar-toggle {
+    z-index: 1001;
+}
+
+.modal-overlay {
+    z-index: 2000;
+}
+
+/* Fix for iOS input zoom */
+@media (max-width: 768px) {
+    input[type="text"],
+    input[type="time"],
+    input[type="checkbox"],
+    input[type="number"],
+    textarea,
+    select {
+        font-size: 16px !important; /* Prevents iOS zoom on focus */
+    }
+}
+
+/* Loading state for buttons */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-top: -8px;
+    margin-left: -8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: button-spinner 1s linear infinite;
+}
+
+@keyframes button-spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Accessibility improvements */
+@media (min-width: 769px) {
+    .sidebar-toggle:focus,
+    .btn-control:focus,
+    .btn-add:focus,
+    .btn-action:focus,
+    .btn-secondary:focus,
+    .btn-primary:focus,
+    .btn-download:focus,
+    .btn-print:focus,
+    .btn-clear:focus,
+    .btn-test-sms:focus,
+    .btn-edit:focus,
+    .btn-delete:focus,
+    .btn-edit-schedule:focus,
+    .btn-delete-schedule:focus,
+    .btn-toggle-schedule:focus,
+    .wall-control-btn:focus,
+    .quick-sim-btn:focus,
+    .form-input:focus,
+    .form-select:focus,
+    .modal-input:focus,
+    .modal-select:focus,
+    .sms-template:focus {
+        outline: 2px solid #58a6ff;
+        outline-offset: 2px;
+    }
+}
+
+/* Improved error states */
+.form-input.error,
+.form-select.error,
+.modal-input.error,
+.modal-select.error {
+    border-color: #da3633 !important;
+    background-color: rgba(218, 54, 51, 0.1) !important;
+}
+
+.form-input.success,
+.form-select.success,
+.modal-input.success,
+.modal-select.success {
+    border-color: #2ea043 !important;
+    background-color: rgba(46, 160, 67, 0.1) !important;
+}
