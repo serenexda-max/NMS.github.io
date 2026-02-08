@@ -3,12 +3,10 @@ const loginForm = document.getElementById('loginForm');
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const togglePasswordBtn = document.getElementById('togglePassword');
-const themeToggleBtn = document.getElementById('themeToggle');
 const notification = document.getElementById('notification');
 const notificationMessage = document.getElementById('notificationMessage');
 const usernameError = document.getElementById('usernameError');
 const passwordError = document.getElementById('passwordError');
-const rememberMeCheckbox = document.getElementById('rememberMe');
 
 // Support card elements
 const supportLink = document.getElementById('supportLink');
@@ -29,23 +27,6 @@ togglePasswordBtn.addEventListener('click', function() {
     // Accessibility: update button label
     const action = type === 'text' ? 'Hide' : 'Show';
     this.setAttribute('aria-label', `${action} password`);
-});
-
-// Theme toggle functionality
-themeToggleBtn.addEventListener('click', function() {
-    document.body.classList.toggle('light-theme');
-    
-    // Update button icon
-    const icon = this.querySelector('i');
-    if (document.body.classList.contains('light-theme')) {
-        icon.classList.remove('fa-moon');
-        icon.classList.add('fa-sun');
-        showNotification('Switched to light theme', 'info');
-    } else {
-        icon.classList.remove('fa-sun');
-        icon.classList.add('fa-moon');
-        showNotification('Switched to dark theme', 'info');
-    }
 });
 
 // Support card functionality
@@ -163,7 +144,6 @@ loginForm.addEventListener('submit', function(event) {
     // Simulate login process
     const username = usernameInput.value.trim();
     const password = passwordInput.value.trim();
-    const rememberMe = rememberMeCheckbox.checked;
     
     // Show loading state
     const submitBtn = loginForm.querySelector('.btn-login');
@@ -182,13 +162,6 @@ loginForm.addEventListener('submit', function(event) {
         if (username === 'admin' && password === 'admin123') {
             showNotification(`Welcome back, ${username}! Redirecting to admin dashboard...`, 'success');
             
-            // Store remember me preference
-            if (rememberMe) {
-                localStorage.setItem('rememberedUser', username);
-            } else {
-                localStorage.removeItem('rememberedUser');
-            }
-            
             // SET SESSION FLAG FOR ADMIN PAGE ACCESS
             localStorage.setItem('isLoggedIn', 'true');
             
@@ -198,20 +171,13 @@ loginForm.addEventListener('submit', function(event) {
             }, 1500);
             
         } else {
-            showNotification('Invalid username or password. Try "demo" / "password" for demo.', 'error');
+            showNotification('Invalid username or password. Try "admin" / "admin123" for demo.', 'error');
         }
     }, 1500);
 });
 
-// Check for remembered user
+// Set focus to username field on page load
 window.addEventListener('load', function() {
-    const rememberedUser = localStorage.getItem('rememberedUser');
-    if (rememberedUser) {
-        usernameInput.value = rememberedUser;
-        rememberMeCheckbox.checked = true;
-    }
-    
-    // Set focus to username field
     usernameInput.focus();
 });
 
