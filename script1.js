@@ -1844,9 +1844,15 @@ function startScheduleMonitoring() {
 
 // ========== WALL CHECKER ==========
 
-// Update wall UI
+// Update wall UI - FIXED TO UPDATE TOGGLE BUTTONS
 function updateWallUI() {
     console.log('Updating wall UI with state:', wallState);
+
+    // Update toggle states FIRST
+    wallNorthToggle.checked = wallState.north === 'plywood';
+    wallEastToggle.checked = wallState.east === 'plywood';
+    wallSouthToggle.checked = wallState.south === 'plywood';
+    wallWestToggle.checked = wallState.west === 'plywood';
 
     // Update wall visual classes
     wallItems.forEach(item => {
@@ -1903,15 +1909,12 @@ function updateWallUI() {
     console.log(`Wall composition: ${concreteWalls} concrete, ${plywoodWalls} plywood`);
 }
 
-// Initialize wall toggle event listeners
+// Initialize wall toggle event listeners - FIXED
 function initializeWallToggles() {
     console.log('Initializing wall toggles');
 
-    // Update toggle states based on wallState
-    wallNorthToggle.checked = wallState.north === 'plywood';
-    wallEastToggle.checked = wallState.east === 'plywood';
-    wallSouthToggle.checked = wallState.south === 'plywood';
-    wallWestToggle.checked = wallState.west === 'plywood';
+    // Set initial toggle states based on wallState
+    updateWallUI(); // This will set all toggles to correct state
 
     // Add fresh event listeners
     wallNorthToggle.addEventListener('change', function() {
@@ -1962,7 +1965,7 @@ function initializeWallToggles() {
         saveWallState();
     });
 
-    // Set all concrete/plywood
+    // Set all concrete/plywood - FIXED TO UPDATE TOGGLES
     setAllConcreteBtn.addEventListener('click', function() {
         if (!isSystemOn) {
             alert('System is OFF. Turn on the system to change wall settings.');
@@ -1973,7 +1976,7 @@ function initializeWallToggles() {
         wallState.east = 'concrete';
         wallState.south = 'concrete';
         wallState.west = 'concrete';
-        updateWallUI();
+        updateWallUI(); // This will update the toggles
         saveWallState();
     });
 
@@ -1987,7 +1990,7 @@ function initializeWallToggles() {
         wallState.east = 'plywood';
         wallState.south = 'plywood';
         wallState.west = 'plywood';
-        updateWallUI();
+        updateWallUI(); // This will update the toggles
         saveWallState();
     });
 }
