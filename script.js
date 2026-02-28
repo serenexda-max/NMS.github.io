@@ -160,7 +160,7 @@ loginForm.addEventListener('submit', function(event) {
         // In a real app, you would make an API call here
         // For demo purposes, we'll simulate a successful login for specific credentials
         if (username === 'admin' && password === 'admin123') {
-            showNotification(`Welcome back, ${username}! Redirecting to admin dashboard...`, 'success');
+            showNotification(`Welcome, ${username}! Redirecting to admin dashboard...`, 'success');
             
             // SET SESSION FLAG FOR ADMIN PAGE ACCESS
             localStorage.setItem('isLoggedIn', 'true');
@@ -171,7 +171,7 @@ loginForm.addEventListener('submit', function(event) {
             }, 1500);
             
         } else {
-            showNotification('Invalid username or password. Try "admin" / "admin123" for demo.', 'error');
+            showNotification('Invalid username or password.');
         }
     }, 1500);
 });

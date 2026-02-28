@@ -254,12 +254,22 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 15px;
-    color: #c9d1d9;
+    padding: 8px 12px;
     text-decoration: none;
-    border-radius: 6px;
-    transition: all 0.3s;
-    position: relative;
+    color: #e6edf3;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-link.sync-btn {
+    background-color: rgba(46, 125, 50, 0.1);
+    border: 1px solid rgba(46, 125, 50, 0.3);
+    color: #4caf50;
+}
+
+.sidebar-link.sync-btn:hover {
+    background-color: rgba(46, 125, 50, 0.2);
+    color: #81c784;
 }
 
 .sidebar-link:hover {
@@ -2746,10 +2756,12 @@ input:checked + .slider:before {
 
     .wall-checker-container {
         flex-direction: row;
+        align-items: stretch;
+        gap: 20px;
     }
 
     .wall-diagram {
-        flex: 1;
+        flex: 1.2;
     }
 
     .wall-info-section {
@@ -2767,7 +2779,7 @@ input:checked + .slider:before {
         grid-template-columns: repeat(3, 1fr);
         grid-template-areas:
             "noise adviser schedule"
-            "wall readings readings"
+            "readings readings wall"
             "controls controls controls";
         gap: 30px;
     }
@@ -2795,6 +2807,10 @@ input:checked + .slider:before {
 
     .noise-status {
         font-size: 24px;
+    }
+
+    .room-layout {
+        height: 280px;
     }
 }
 
@@ -3020,6 +3036,118 @@ input:checked + .slider:before {
         transform: scale(0.98);
         transition: transform 0.1s;
     }
+}
+
+/* ========== PRINT REPORT (READINGS) STYLES ========== */
+.print-report {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    color: #333;
+}
+
+.print-report .header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #333;
+    padding-bottom: 15px;
+}
+
+.print-report .header h1 {
+    color: #2c3e50;
+    margin: 0 0 10px 0;
+}
+
+.print-report .header .subtitle {
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+.print-report .section {
+    margin-bottom: 25px;
+}
+
+.print-report .section h2 {
+    color: #34495e;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+.print-report .info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.print-report .info-item {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 5px;
+    border-left: 4px solid #3498db;
+}
+
+.print-report .info-item strong {
+    color: #2c3e50;
+}
+
+.print-report table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+}
+
+.print-report th {
+    background-color: #34495e;
+    color: white;
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.print-report td {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.print-report tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.print-report .status-quiet { color: #27ae60; }
+.print-report .status-moderate { color: #f39c12; }
+.print-report .status-loud { color: #e74c3c; }
+
+.print-report .sms-sent { color: #27ae60; }
+.print-report .sms-failed { color: #e74c3c; }
+.print-report .sms-cooldown { color: #f39c12; }
+
+.print-report .summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.print-report .summary-item {
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    color: white;
+}
+
+.print-report .summary-quiet { background-color: #27ae60; }
+.print-report .summary-moderate { background-color: #f39c12; }
+.print-report .summary-loud { background-color: #e74c3c; }
+
+.print-report .footer {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 12px;
 }
 
 /* ========== PRINT STYLES ========== */

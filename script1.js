@@ -112,6 +112,7 @@ const nextSmsWindow = document.getElementById('nextSmsWindow');
 let currentDecibels = 65;
 let isAutoSimulating = false;
 let autoSimulateInterval = null;
+let autoSimulateStep = 0;
 let readingsHistory = [];
 let editingAdviserId = null;
 let smsCooldownTimer = null;
@@ -124,7 +125,7 @@ let advisers = [];
 let smsSettings = {
     enabled: true,
     totalSent: 0,
-    template: "URGENT: High noise level detected in your classroom. Current level: {level} dB ({status}). Please check immediately."
+    template: "NMS: High noise level detected in your classroom. Current level: {level} dB ({status})."
 };
 
 // SMS Scheduling state
@@ -152,6 +153,7 @@ let wallState = {
 let isSidebarOpen = false;
 let isAutoScrollEnabled = true;
 let activeSection = 'noise';
+let useRealHardware = true; // New: Toggle between real hardware and simulation
 
 // ========== AUTHENTICATION ==========
 
@@ -408,14 +410,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     loadSavedState();
     initializeSystemPower();
-    updateNoiseDisplay(currentDecibels);
+    
+    // Start with real hardware data fetching
+    setInterval(fetchRealNoiseData, 2000); // Fetch every 2 seconds
+    
+    // Keep simulation functions available for testing
+    initializeNoiseSimulation();
+    
     updateReadingsTable();
     updateAdvisersTable();
     updateScheduleAdviserDropdown();
     updateSchedulesTable();
     updateWallUI();
     initializeWallToggles();
-    initializeNoiseSimulation();
     initSidebar();
     updateTime();
     
@@ -427,7 +434,37 @@ document.addEventListener('DOMContentLoaded', function() {
     
     setInterval(updateTime, 60000);
 
-    console.log('Dashboard initialized successfully');
+    // Initialize event listeners for readings buttons
+    downloadReadingsBtn.addEventListener('click', downloadReadingsAsText);
+    printReadingsBtn.addEventListener('click', printReadingsReport);
+    
+    clearReadingsBtn.addEventListener('click', function() {
+        if (!isSystemOn) {
+            alert('System is OFF. Turn on the system to clear readings.');
+            return;
+        }
+
+        if (confirm('Are you sure you want to clear all recent readings?')) {
+            readingsHistory = [];
+            updateReadingsTable();
+            updateSidebarBadges();
+            saveState();
+        }
+    });
+
+    // Add phone sync button to sidebar
+    const syncPhonesBtn = document.createElement('button');
+    syncPhonesBtn.innerHTML = '<i class="fas fa-sync"></i> Sync Phones';
+    syncPhonesBtn.className = 'sidebar-link sync-btn';
+    syncPhonesBtn.addEventListener('click', syncPhoneNumbersToHardware);
+    
+    // Insert sync button after adviser management
+    const adviserLink = document.querySelector('[data-section="advisers"]');
+    if (adviserLink) {
+        adviserLink.parentNode.insertBefore(syncPhonesBtn, adviserLink.nextSibling);
+    }
+
+    console.log('Dashboard initialized with real hardware connection');
 });
 
 // ========== SIDEBAR FUNCTIONALITY ==========
@@ -576,16 +613,16 @@ function triggerQuickSimulation(level) {
     let decibels;
     switch(level) {
         case 'quiet':
-            decibels = getRandomDecibels(40, 59);
+            decibels = 50;      // fixed quiet value
             break;
         case 'moderate':
-            decibels = getRandomDecibels(60, 80);
+            decibels = 80;      // fixed moderate value
             break;
         case 'loud':
-            decibels = getRandomDecibels(81, 100);
+            decibels = 110;     // fixed loud value
             break;
         default:
-            decibels = getRandomDecibels(60, 80);
+            decibels = 80;
     }
     
     console.log(`Quick simulation: ${level} (${decibels} dB)`);
@@ -714,6 +751,109 @@ function updateSidebarNoiseValue(decibels, status) {
     }
 }
 
+// ========== REAL NOISE DATA FETCHING ==========
+
+// Fetch real noise data from NMS hardware
+async function fetchRealNoiseData() {
+    if (!useRealHardware) {
+        console.log('Simulation mode active - skipping hardware fetch');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/noise');
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Real noise data:', data);
+            
+            // Update display with real data
+            updateNoiseDisplay(data.decibels);
+            
+            // Update hardware status
+            updateHardwareStatus(data);
+        }
+    } catch (error) {
+        console.error('Error fetching noise data:', error);
+        // Fallback to simulation if hardware not available
+        if (isAutoSimulating) {
+            stopAutoSimulation();
+        }
+    }
+}
+
+// Update hardware status indicators
+function updateHardwareStatus(data) {
+    // Update system status based on hardware state
+    if (data.isAlarming) {
+        // Hardware is alarming
+        console.log('Hardware alarm active');
+    } else if (data.inCooldown) {
+        // Hardware is in cooldown
+        console.log('Hardware in cooldown');
+    }
+    
+    // Update SMS status
+    if (data.smsSent) {
+        console.log('SMS sent by hardware');
+    }
+}
+
+// Sync phone numbers to SIM800L hardware
+async function syncPhoneNumbersToHardware() {
+    try {
+        // Clear existing phone numbers first
+        try {
+            const clearResponse = await fetch('/api/phone/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+            
+            if (clearResponse.ok) {
+                console.log('Cleared existing phone numbers');
+            }
+        } catch (error) {
+            console.error('Error clearing phone numbers:', error);
+        }
+        
+        // Get present advisers who should receive SMS
+        const presentAdvisers = advisers.filter(a => a.status === 'present');
+        
+        if (presentAdvisers.length === 0) {
+            console.log('No present advisers to sync');
+            return;
+        }
+
+        // Send each phone number to hardware
+        for (const adviser of presentAdvisers) {
+            try {
+                const response = await fetch('/api/phone', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `plain=${encodeURIComponent(adviser.number)}`
+                });
+                
+                if (response.ok) {
+                    console.log(`Synced phone: ${adviser.number}`);
+                } else {
+                    console.error(`Failed to sync phone: ${adviser.number}`);
+                }
+            } catch (error) {
+                console.error(`Error syncing phone ${adviser.number}:`, error);
+            }
+        }
+        
+        console.log(`Synced ${presentAdvisers.length} phone numbers to hardware`);
+        alert(`Successfully synced ${presentAdvisers.length} phone numbers to hardware!`);
+    } catch (error) {
+        console.error('Error syncing phone numbers:', error);
+        alert('Error syncing phone numbers. Please check console.');
+    }
+}
+
 // ========== NOISE MONITORING ==========
 
 // Update time display
@@ -752,7 +892,7 @@ function updateNoiseDisplay(decibels) {
         status = 'Quiet';
         colorClass = 'quiet';
         shouldSendSms = false;
-    } else if (measuredDecibels <= 80) {
+    } else if (measuredDecibels <= 99) {
         status = 'Moderate';
         colorClass = 'moderate';
         shouldSendSms = false;
@@ -960,6 +1100,90 @@ function updateReadingsTable() {
 }
 
 // ========== ADVISER MANAGEMENT ==========
+//
+// Phone number helpers (Philippines format)
+function sanitizePhoneInput(value) {
+    if (!value) return '';
+    const digitsOnly = value.replace(/\D/g, '');
+    return digitsOnly.slice(0, 11);
+}
+
+function formatPhilippinesNumber(value) {
+    const digits = (value || '').replace(/\D/g, '');
+
+    if (digits.length !== 11) {
+        return digits;
+    }
+
+    let core = digits;
+    if (core.startsWith('0')) {
+        core = core.slice(1);
+    }
+
+    if (core.length !== 10) {
+        return digits;
+    }
+
+    const part1 = core.slice(0, 3);
+    const part2 = core.slice(3, 6);
+    const part3 = core.slice(6);
+
+    return `+63 ${part1} ${part2} ${part3}`;
+}
+
+function validateAndFormatPhoneNumber(value) {
+    let digits = (value || '').toString().replace(/\D/g, '');
+
+    // Handle numbers that are already in +63 format
+    if (digits.startsWith('63') && digits.length >= 12) {
+        // Convert 63XXXXXXXXXX → 0XXXXXXXXXX (keep last 10 digits)
+        digits = '0' + digits.slice(digits.length - 10);
+    }
+
+    // If still longer than 11, keep the last 11 digits
+    if (digits.length > 11) {
+        digits = digits.slice(-11);
+    }
+
+    if (digits.length !== 11) {
+        return {
+            ok: false,
+            message: 'Contact number must be exactly 11 digits.',
+            formatted: ''
+        };
+    }
+
+    if (!digits.startsWith('09')) {
+        return {
+            ok: false,
+            message: 'Contact number must start with 09.',
+            formatted: ''
+        };
+    }
+
+    return {
+        ok: true,
+        message: '',
+        formatted: formatPhilippinesNumber(digits)
+    };
+}
+
+// Apply phone input behavior to adviser contact fields
+if (adviserNumberInput) {
+    adviserNumberInput.addEventListener('input', function() {
+        this.value = sanitizePhoneInput(this.value);
+    });
+}
+
+if (editAdviserNumber) {
+    editAdviserNumber.addEventListener('input', function() {
+        this.value = sanitizePhoneInput(this.value);
+    });
+
+    editAdviserNumber.addEventListener('blur', function() {
+        this.value = formatPhilippinesNumber(this.value);
+    });
+}
 
 // Update advisers table
 function updateAdvisersTable() {
@@ -1049,11 +1273,25 @@ addAdviserBtn.addEventListener('click', function() {
 
     const name = adviserNameInput.value.trim();
     const subject = adviserSubjectInput.value.trim();
-    const number = adviserNumberInput.value.trim();
+    const rawNumber = adviserNumberInput.value.trim();
     const status = adviserStatusSelect.value;
 
-    if (!name || !subject || !number) {
+    if (!name || !subject || !rawNumber) {
         alert('Please fill in all fields');
+        return;
+    }
+
+    // Validate that name doesn't contain integers
+    if (/\d/.test(name)) {
+        alert('Adviser name cannot contain integers/numbers');
+        adviserNameInput.focus();
+        return;
+    }
+
+    const phoneResult = validateAndFormatPhoneNumber(rawNumber);
+    if (!phoneResult.ok) {
+        alert(phoneResult.message);
+        adviserNumberInput.focus();
         return;
     }
 
@@ -1061,7 +1299,7 @@ addAdviserBtn.addEventListener('click', function() {
         id: Date.now(),
         name,
         subject,
-        number,
+        number: phoneResult.formatted,
         status
     };
 
@@ -1115,11 +1353,34 @@ saveAdviserBtn.addEventListener('click', function() {
     const adviserIndex = advisers.findIndex(a => a.id === editingAdviserId);
     if (adviserIndex === -1) return;
 
+    const editedName = editAdviserName.value.trim();
+    const editedSubject = editAdviserSubject.value.trim();
+    const editedRawNumber = editAdviserNumber.value.trim();
+
+    if (!editedName || !editedSubject || !editedRawNumber) {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    // Validate that edited name doesn't contain integers
+    if (/\d/.test(editedName)) {
+        alert('Adviser name cannot contain integers/numbers');
+        editAdviserName.focus();
+        return;
+    }
+
+    const phoneResult = validateAndFormatPhoneNumber(editedRawNumber);
+    if (!phoneResult.ok) {
+        alert(phoneResult.message);
+        editAdviserNumber.focus();
+        return;
+    }
+
     advisers[adviserIndex] = {
         ...advisers[adviserIndex],
-        name: editAdviserName.value.trim(),
-        subject: editAdviserSubject.value.trim(),
-        number: editAdviserNumber.value.trim(),
+        name: editedName,
+        subject: editedSubject,
+        number: phoneResult.formatted,
         status: editAdviserStatus.value
     };
 
@@ -2041,8 +2302,8 @@ function initializeNoiseSimulation() {
             console.log('Auto simulation is running, ignoring manual click');
             return;
         }
-        const moderateDecibels = getRandomDecibels(60, 80);
-        console.log(`Generated moderate decibels: ${moderateDecibels}`);
+        const moderateDecibels = 80;
+        console.log(`Moderate simulation: ${moderateDecibels} dB`);
         updateNoiseDisplay(moderateDecibels);
     });
 
@@ -2057,8 +2318,8 @@ function initializeNoiseSimulation() {
             console.log('Auto simulation is running, ignoring manual click');
             return;
         }
-        const loudDecibels = getRandomDecibels(81, 100);
-        console.log(`Generated loud decibels: ${loudDecibels}`);
+        const loudDecibels = 110;
+        console.log(`Loud simulation: ${loudDecibels} dB`);
         updateNoiseDisplay(loudDecibels);
     });
 
@@ -2076,16 +2337,9 @@ function initializeNoiseSimulation() {
 
             console.log('Starting auto simulation');
             autoSimulateInterval = setInterval(function() {
-                const rand = Math.random();
-                let newDecibels;
-
-                if (rand < 0.4) {
-                    newDecibels = getRandomDecibels(40, 59);
-                } else if (rand < 0.8) {
-                    newDecibels = getRandomDecibels(60, 80);
-                } else {
-                    newDecibels = getRandomDecibels(81, 100);
-                }
+                const sequence = [50, 80, 110];
+                const newDecibels = sequence[autoSimulateStep % sequence.length];
+                autoSimulateStep++;
 
                 console.log(`Auto simulation: ${newDecibels} dB`);
                 updateNoiseDisplay(newDecibels);
@@ -2244,107 +2498,9 @@ function printReadingsReport() {
         <html>
         <head>
             <title>Noise Monitoring System - Readings Report</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    margin: 20px;
-                    color: #333;
-                }
-                .header {
-                    text-align: center;
-                    margin-bottom: 30px;
-                    border-bottom: 2px solid #333;
-                    padding-bottom: 15px;
-                }
-                .header h1 {
-                    color: #2c3e50;
-                    margin: 0 0 10px 0;
-                }
-                .header .subtitle {
-                    color: #7f8c8d;
-                    font-size: 14px;
-                }
-                .section {
-                    margin-bottom: 25px;
-                }
-                .section h2 {
-                    color: #34495e;
-                    border-bottom: 1px solid #ddd;
-                    padding-bottom: 5px;
-                    margin-bottom: 15px;
-                }
-                .info-grid {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 15px;
-                    margin-bottom: 20px;
-                }
-                .info-item {
-                    background: #f8f9fa;
-                    padding: 12px;
-                    border-radius: 5px;
-                    border-left: 4px solid #3498db;
-                }
-                .info-item strong {
-                    color: #2c3e50;
-                }
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 20px 0;
-                    font-size: 14px;
-                }
-                th {
-                    background-color: #34495e;
-                    color: white;
-                    padding: 10px;
-                    text-align: left;
-                    border: 1px solid #ddd;
-                }
-                td {
-                    padding: 10px;
-                    border: 1px solid #ddd;
-                }
-                tr:nth-child(even) {
-                    background-color: #f9f9f9;
-                }
-                .status-quiet { color: #27ae60; }
-                .status-moderate { color: #f39c12; }
-                .status-loud { color: #e74c3c; }
-                .sms-sent { color: #27ae60; }
-                .sms-failed { color: #e74c3c; }
-                .sms-cooldown { color: #f39c12; }
-                .summary {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 15px;
-                    margin-top: 20px;
-                }
-                .summary-item {
-                    text-align: center;
-                    padding: 15px;
-                    border-radius: 8px;
-                    color: white;
-                }
-                .summary-quiet { background-color: #27ae60; }
-                .summary-moderate { background-color: #f39c12; }
-                .summary-loud { background-color: #e74c3c; }
-                .footer {
-                    margin-top: 30px;
-                    padding-top: 15px;
-                    border-top: 1px solid #ddd;
-                    text-align: center;
-                    color: #7f8c8d;
-                    font-size: 12px;
-                }
-                @media print {
-                    body { margin: 0; }
-                    .no-print { display: none; }
-                    @page { margin: 1cm; }
-                }
-            </style>
+            <link rel="stylesheet" href="style1.css">
         </head>
-        <body>
+        <body class="print-report">
             <div class="header">
                 <h1>Noise Monitoring System</h1>
                 <div class="subtitle">Readings Report</div>
@@ -2502,21 +2658,6 @@ function printReadingsReport() {
 
 // ========== EVENT LISTENERS ==========
 
-// Clear recent readings
-clearReadingsBtn.addEventListener('click', function() {
-    if (!isSystemOn) {
-        alert('System is OFF. Turn on the system to clear readings.');
-        return;
-    }
-
-    if (confirm('Are you sure you want to clear all recent readings?')) {
-        readingsHistory = [];
-        updateReadingsTable();
-        updateSidebarBadges();
-        saveState();
-    }
-});
-
 // Test SMS button
 testSmsBtn.addEventListener('click', function() {
     if (!isSystemOn) {
@@ -2585,10 +2726,6 @@ logoutBtn.addEventListener('click', function() {
         window.location.href = 'index.html';
     }
 });
-
-// Export buttons
-downloadReadingsBtn.addEventListener('click', downloadReadingsAsText);
-printReadingsBtn.addEventListener('click', printReadingsReport);
 
 // ========== DATA PERSISTENCE ==========
 
@@ -2773,20 +2910,11 @@ function debugSchedules() {
 document.addEventListener('keydown', function(event) {
     if (!isSystemOn) return;
 
+    const target = event.target;
+    const tagName = target && target.tagName ? target.tagName.toUpperCase() : '';
+    const isTypingField = tagName === 'INPUT' || tagName === 'TEXTAREA' || (target && target.isContentEditable);
+
     switch(event.key) {
-        case '1':
-            if (!isAutoSimulating) simulateQuietBtn.click();
-            break;
-        case '2':
-            if (!isAutoSimulating) simulateModerateBtn.click();
-            break;
-        case '3':
-            if (!isAutoSimulating) simulateLoudBtn.click();
-            break;
-        case ' ':
-            event.preventDefault();
-            if (!isAutoSimulating) autoSimulateBtn.click();
-            break;
         case 'Escape':
             if (editModalOverlay.classList.contains('active')) {
                 closeEditModalFunc();
@@ -2832,10 +2960,6 @@ document.addEventListener('keydown', function(event) {
 window.addEventListener('load', function() {
     setTimeout(function() {
         alert('Tip: Use keyboard shortcuts:\n' +
-              '1 = Quiet simulation\n' +
-              '2 = Moderate simulation\n' +
-              '3 = Loud simulation\n' +
-              'Space = Toggle auto simulation\n' +
               'Ctrl+D = Download readings\n' +
               'Ctrl+P = Print report\n' +
               'Ctrl+B = Toggle sidebar\n' +
@@ -2854,16 +2978,9 @@ document.addEventListener('visibilitychange', function() {
     } else if (!document.hidden && isAutoSimulating && autoSimulateBtn.getAttribute('data-paused') === 'true') {
         autoSimulateBtn.removeAttribute('data-paused');
         autoSimulateInterval = setInterval(function() {
-            const rand = Math.random();
-            let newDecibels;
-
-            if (rand < 0.4) {
-                newDecibels = getRandomDecibels(40, 59);
-            } else if (rand < 0.8) {
-                newDecibels = getRandomDecibels(60, 80);
-            } else {
-                newDecibels = getRandomDecibels(81, 100);
-            }
+            const sequence = [50, 80, 110];
+            const newDecibels = sequence[autoSimulateStep % sequence.length];
+            autoSimulateStep++;
 
             updateNoiseDisplay(newDecibels);
         }, 3000);
