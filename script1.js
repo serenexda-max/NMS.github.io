@@ -1,6 +1,3 @@
-// ========== DOM ELEMENTS ==========
-
-// Main DOM Elements
 const decibelValue = document.getElementById('decibelValue');
 const noiseStatus = document.getElementById('noiseStatus');
 const indicatorFill = document.getElementById('indicatorFill');
@@ -11,7 +8,6 @@ const clearReadingsBtn = document.getElementById('clearReadingsBtn');
 const downloadReadingsBtn = document.getElementById('downloadReadingsBtn');
 const printReadingsBtn = document.getElementById('printReadingsBtn');
 
-// System Power Elements
 const systemPowerToggle = document.getElementById('systemPowerToggle');
 const powerStatus = document.getElementById('powerStatus');
 const headerSystemStatus = document.getElementById('headerSystemStatus');
@@ -19,7 +15,6 @@ const headerStatusDot = document.getElementById('headerStatusDot');
 const systemPowerStatus = document.getElementById('systemPowerStatus');
 const footerSystemStatus = document.getElementById('footerSystemStatus');
 
-// Adviser management elements
 const presentCount = document.getElementById('presentCount');
 const onLeaveCount = document.getElementById('onLeaveCount');
 const absentCount = document.getElementById('absentCount');
@@ -29,16 +24,15 @@ const adviserNumberInput = document.getElementById('adviserNumber');
 const adviserStatusSelect = document.getElementById('adviserStatus');
 const addAdviserBtn = document.getElementById('addAdviserBtn');
 const advisersTable = document.getElementById('advisersTable');
-const smsAllBtn = document.getElementById('smsAllBtn');
-const enableSmsToggle = document.getElementById('enableSms');
-const smsTemplate = document.getElementById('smsTemplate');
-const totalSmsSent = document.getElementById('totalSmsSent');
+const emailAllBtn = null; // Will use testEmailBtn instead
+const enableEmailToggle = document.getElementById('enableEmail');
+const emailTemplate = document.getElementById('emailTemplate');
+const totalEmailsSent = document.getElementById('totalEmailsSent');
 const activeAdvisers = document.getElementById('activeAdvisers');
 const adviserSystemStatus = document.getElementById('adviserSystemStatus');
-const footerSmsStatus = document.getElementById('footerSmsStatus');
+const footerEmailStatus = document.getElementById('footerEmailStatus');
 const footerAdviserStatus = document.getElementById('footerAdviserStatus');
 
-// Modal elements
 const editModalOverlay = document.getElementById('editModalOverlay');
 const closeEditModal = document.getElementById('closeEditModal');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
@@ -48,7 +42,6 @@ const editAdviserNumber = document.getElementById('editAdviserNumber');
 const editAdviserStatus = document.getElementById('editAdviserStatus');
 const saveAdviserBtn = document.getElementById('saveAdviserBtn');
 
-// Wall checker elements
 const wallSummary = document.getElementById('wallSummary');
 const concreteCount = document.getElementById('concreteCount');
 const plywoodCount = document.getElementById('plywoodCount');
@@ -62,18 +55,15 @@ const setAllConcreteBtn = document.getElementById('setAllConcrete');
 const setAllPlywoodBtn = document.getElementById('setAllPlywood');
 const wallItems = document.querySelectorAll('.wall-item');
 
-// System status elements
 const sim800lStatus = document.getElementById('sim800lStatus');
 const wallSystemStatus = document.getElementById('wallSystemStatus');
 
-// Control buttons
 const simulateQuietBtn = document.getElementById('simulateQuiet');
 const simulateModerateBtn = document.getElementById('simulateModerate');
 const simulateLoudBtn = document.getElementById('simulateLoud');
 const autoSimulateBtn = document.getElementById('autoSimulate');
-const testSmsBtn = document.getElementById('testSmsBtn');
+const testEmailBtn = document.getElementById('testEmailBtn');
 
-// Sidebar elements
 const sidebarToggle = document.getElementById('sidebarToggle');
 const sidebar = document.getElementById('sidebar');
 const mainContainer = document.getElementById('mainContainer');
@@ -85,10 +75,9 @@ const readingsCount = document.getElementById('readingsCount');
 const advisersBadge = document.getElementById('advisersBadge');
 const schedulesBadge = document.getElementById('schedulesBadge');
 const wallsBadge = document.getElementById('wallsBadge');
-const smsBadge = document.getElementById('smsBadge');
+const emailBadge = document.getElementById('emailBadge');
 const quickSimButtons = document.querySelectorAll('.quick-sim-btn');
 
-// Schedule management elements
 const scheduleAdviserSelect = document.getElementById('scheduleAdviserSelect');
 const scheduleDay = document.getElementById('scheduleDay');
 const scheduleStartTime = document.getElementById('scheduleStartTime');
@@ -104,44 +93,38 @@ const activeSchedulesCount = document.getElementById('activeSchedulesCount');
 const totalSchedulesCount = document.getElementById('totalSchedulesCount');
 const currentlyScheduled = document.getElementById('currentlyScheduled');
 const offSchedule = document.getElementById('offSchedule');
-const nextSmsWindow = document.getElementById('nextSmsWindow');
+const nextEmailWindow = document.getElementById('nextEmailWindow');
 
-// ========== STATE VARIABLES ==========
-
-// Dashboard state
 let currentDecibels = 65;
 let isAutoSimulating = false;
 let autoSimulateInterval = null;
 let autoSimulateStep = 0;
 let readingsHistory = [];
 let editingAdviserId = null;
-let smsCooldownTimer = null;
+let emailCooldownTimer = null;
 
-// System Power state
 let isSystemOn = true;
 
-// Adviser management state
 let advisers = [];
-let smsSettings = {
+let emailSettings = {
     enabled: true,
     totalSent: 0,
-    template: "NMS: High noise level detected in your classroom. Current level: {level} dB ({status})."
+    template: "NMS Alert: High noise level detected in your classroom. Current level: {level} dB ({status})."
 };
 
-// SMS Scheduling state
-let smsCooldown = {
+let emailCooldown = {
     enabled: true,
     hours: 1,
     minutes: 0,
-    lastSmsTime: null,
+    lastEmailTime: null,
     cooldownEnd: null
 };
 
 let teacherSchedules = [];
-let smsSessions = [];
+let emailSessions = [];
 let editingScheduleId = null;
+let adviserNotifiedInSession = {};
 
-// Wall checker state
 let wallState = {
     north: 'concrete',
     east: 'concrete',
@@ -149,15 +132,11 @@ let wallState = {
     west: 'plywood'
 };
 
-// Sidebar state
 let isSidebarOpen = false;
 let isAutoScrollEnabled = true;
 let activeSection = 'noise';
-let useRealHardware = true; // New: Toggle between real hardware and simulation
+let useRealHardware = true;
 
-// ========== AUTHENTICATION ==========
-
-// Check if user is logged in
 function checkAuth() {
     const hasSession = localStorage.getItem('isLoggedIn') === 'true';
 
@@ -170,16 +149,12 @@ function checkAuth() {
     return true;
 }
 
-// ========== TIME HELPER FUNCTIONS ==========
-
-// Get current day in lowercase (e.g., 'monday')
 function getCurrentDay() {
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const now = new Date();
     return days[now.getDay()];
 }
 
-// Get current time in HH:MM format (24-hour)
 function getCurrentTime() {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, '0');
@@ -187,14 +162,12 @@ function getCurrentTime() {
     return `${hours}:${minutes}`;
 }
 
-// Convert time to minutes for comparison (e.g., "08:30" → 510)
 function timeToMinutes(timeString) {
     if (!timeString) return 0;
     const [hours, minutes] = timeString.split(':').map(Number);
     return hours * 60 + minutes;
 }
 
-// Check if current time is within schedule
 function isTimeInRange(currentTime, startTime, endTime) {
     const currentMinutes = timeToMinutes(currentTime);
     const startMinutes = timeToMinutes(startTime);
@@ -203,7 +176,6 @@ function isTimeInRange(currentTime, startTime, endTime) {
     return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
 }
 
-// Format time for display
 function formatTimeForDisplay(timeString) {
     if (!timeString) return '--:--';
     const [hours, minutes] = timeString.split(':');
@@ -213,7 +185,6 @@ function formatTimeForDisplay(timeString) {
     return `${displayHour}:${minutes} ${ampm}`;
 }
 
-// Get current time with seconds
 function getCurrentTimeWithSeconds() {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, '0');
@@ -222,53 +193,40 @@ function getCurrentTimeWithSeconds() {
     return `${hours}:${minutes}:${seconds}`;
 }
 
-// ========== SYSTEM POWER MANAGEMENT ==========
+const BREAK_TIMES = [
+    { start: '09:00', end: '09:15' },
+    { start: '15:00', end: '15:15' }
+];
 
-// Initialize system power
+function isBreakTime() {
+    const current = getCurrentTime();
+    return BREAK_TIMES.some(bt => isTimeInRange(current, bt.start, bt.end));
+}
+
 function initializeSystemPower() {
-    // Load saved system power state
     const savedSystemPower = localStorage.getItem('systemPower');
     if (savedSystemPower !== null) {
         isSystemOn = savedSystemPower === 'true';
     }
-    
-    // Update UI based on saved state
     updateSystemPowerUI();
-    
-    // Add event listener for system power toggle
     systemPowerToggle.addEventListener('change', function() {
         toggleSystemPower(this.checked);
     });
 }
 
-// Toggle system power
 function toggleSystemPower(isOn) {
     isSystemOn = isOn;
-    
-    // Save state
     localStorage.setItem('systemPower', isSystemOn.toString());
-    
-    // Update UI
     updateSystemPowerUI();
-    
-    // If turning system off, stop auto simulation
     if (!isSystemOn && isAutoSimulating) {
         stopAutoSimulation();
     }
-    
-    // Add system status reading
     addSystemStatusReading();
-    
-    // Log action
     console.log(`System ${isSystemOn ? 'turned ON' : 'turned OFF'}`);
 }
 
-// Update system power UI
 function updateSystemPowerUI() {
-    // Update toggle state
     systemPowerToggle.checked = isSystemOn;
-    
-    // Update sidebar power status
     const powerStatusElement = document.getElementById('powerStatus');
     if (isSystemOn) {
         powerStatusElement.innerHTML = '<i class="fas fa-plug"></i><span>System is ON</span>';
@@ -291,8 +249,6 @@ function updateSystemPowerUI() {
         footerSystemStatus.textContent = 'OFF';
         footerSystemStatus.className = 'status-inactive';
     }
-    
-    // Update noise display when system is off
     if (!isSystemOn) {
         decibelValue.textContent = '-- dB';
         decibelValue.className = 'decibel-value color-system-off';
@@ -302,42 +258,31 @@ function updateSystemPowerUI() {
         sidebarDbValue.textContent = '-- dB';
         sidebarDbValue.className = 'sidebar-stat-value';
     }
-    
-    // Enable/disable controls
     updateControlStates();
 }
 
-// Update control states based on system power
 function updateControlStates() {
     const simulationButtons = [simulateQuietBtn, simulateModerateBtn, simulateLoudBtn, autoSimulateBtn];
     const quickSimButtons = document.querySelectorAll('.quick-sim-btn');
-    const systemControls = [testSmsBtn, smsAllBtn, addAdviserBtn, saveScheduleBtn, 
+    const systemControls = [testEmailBtn, addAdviserBtn, saveScheduleBtn, 
                            activateAllSchedules, deactivateAllSchedules, clearReadingsBtn,
                            downloadReadingsBtn, printReadingsBtn];
-    
-    // Disable/enable simulation buttons
     simulationButtons.forEach(btn => {
         if (btn) {
             btn.disabled = !isSystemOn;
             btn.classList.toggle('system-disabled', !isSystemOn);
         }
     });
-    
-    // Disable/enable quick simulation buttons
     quickSimButtons.forEach(btn => {
         if (btn) {
             btn.disabled = !isSystemOn;
         }
     });
-    
-    // Disable/enable other system controls
     systemControls.forEach(btn => {
         if (btn) {
             btn.disabled = !isSystemOn;
         }
     });
-    
-    // Disable/enable form inputs
     const formInputs = [adviserNameInput, adviserSubjectInput, adviserNumberInput, 
                        adviserStatusSelect, scheduleAdviserSelect, scheduleDay,
                        scheduleStartTime, scheduleEndTime, scheduleActive];
@@ -347,41 +292,30 @@ function updateControlStates() {
             input.disabled = !isSystemOn;
         }
     });
-    
-    // Disable/enable SMS toggle
-    if (enableSmsToggle) {
-        enableSmsToggle.disabled = !isSystemOn;
+    if (enableEmailToggle) {
+        enableEmailToggle.disabled = !isSystemOn;
     }
-    
-    // Disable/enable SMS template
-    if (smsTemplate) {
-        smsTemplate.disabled = !isSystemOn;
+    if (emailTemplate) {
+        emailTemplate.disabled = !isSystemOn;
     }
-    
-    // Disable/enable wall toggles
     const wallToggles = [wallNorthToggle, wallEastToggle, wallSouthToggle, wallWestToggle];
     wallToggles.forEach(toggle => {
         if (toggle) {
             toggle.disabled = !isSystemOn;
         }
     });
-    
-    // Disable/enable wall control buttons
     const wallButtons = [setAllConcreteBtn, setAllPlywoodBtn];
     wallButtons.forEach(btn => {
         if (btn) {
             btn.disabled = !isSystemOn;
         }
     });
-    
-    // Update dashboard card appearance
     const dashboardCards = document.querySelectorAll('.dashboard-card');
     dashboardCards.forEach(card => {
         card.classList.toggle('system-disabled', !isSystemOn);
     });
 }
 
-// Add system status reading to history
 function addSystemStatusReading() {
     const timeString = getCurrentTimeWithSeconds();
     
@@ -390,7 +324,7 @@ function addSystemStatusReading() {
         originalDecibels: 0,
         measuredDecibels: 0,
         status: 'System ' + (isSystemOn ? 'ON' : 'OFF'),
-        smsStatus: 'N/A',
+        emailStatus: 'N/A',
         recipients: [],
         sessionInfo: isSystemOn ? 'System activated' : 'System deactivated',
         wallComposition: `${concreteCount.textContent}C/${plywoodCount.textContent}P`,
@@ -402,19 +336,12 @@ function addSystemStatusReading() {
     updateReadingsTable();
 }
 
-// ========== INITIALIZATION ==========
-
-// Initialize everything
 document.addEventListener('DOMContentLoaded', function() {
     if (!checkAuth()) return;
 
     loadSavedState();
     initializeSystemPower();
-    
-    // Start with real hardware data fetching
-    setInterval(fetchRealNoiseData, 2000); // Fetch every 2 seconds
-    
-    // Keep simulation functions available for testing
+    setInterval(fetchRealNoiseData, 2000);
     initializeNoiseSimulation();
     
     updateReadingsTable();
@@ -426,15 +353,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initSidebar();
     updateTime();
     
-    // Initialize event listeners for schedule management
     initializeScheduleEventListeners();
-    
-    // Start monitoring schedules
     startScheduleMonitoring();
-    
     setInterval(updateTime, 60000);
-
-    // Initialize event listeners for readings buttons
     downloadReadingsBtn.addEventListener('click', downloadReadingsAsText);
     printReadingsBtn.addEventListener('click', printReadingsReport);
     
@@ -451,45 +372,30 @@ document.addEventListener('DOMContentLoaded', function() {
             saveState();
         }
     });
-
-    // Add phone sync button to sidebar
-    const syncPhonesBtn = document.createElement('button');
-    syncPhonesBtn.innerHTML = '<i class="fas fa-sync"></i> Sync Phones';
-    syncPhonesBtn.className = 'sidebar-link sync-btn';
-    syncPhonesBtn.addEventListener('click', syncPhoneNumbersToHardware);
-    
-    // Insert sync button after adviser management
+    const syncEmailsBtn = document.createElement('button');
+    syncEmailsBtn.innerHTML = '<i class="fas fa-sync"></i> Sync Emails';
+    syncEmailsBtn.className = 'sidebar-link sync-btn';
+    syncEmailsBtn.addEventListener('click', syncEmailAddressesToHardware);
     const adviserLink = document.querySelector('[data-section="advisers"]');
     if (adviserLink) {
-        adviserLink.parentNode.insertBefore(syncPhonesBtn, adviserLink.nextSibling);
+        adviserLink.parentNode.insertBefore(syncEmailsBtn, adviserLink.nextSibling);
     }
 
     console.log('Dashboard initialized with real hardware connection');
 });
 
-// ========== SIDEBAR FUNCTIONALITY ==========
-
-// Initialize sidebar
 function initSidebar() {
     console.log('Initializing sidebar');
-    
-    // Load sidebar state
     const savedSidebarState = localStorage.getItem('sidebarState');
     if (savedSidebarState === 'open') {
         openSidebar();
     }
-    
-    // Load auto-scroll state
     const savedAutoScroll = localStorage.getItem('autoScrollEnabled');
     if (savedAutoScroll !== null) {
         isAutoScrollEnabled = savedAutoScroll === 'true';
         updateAutoScrollUI();
     }
-    
-    // Add event listeners
     sidebarToggle.addEventListener('click', toggleSidebar);
-    
-    // Add click event to sidebar links
     sidebarLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
@@ -498,8 +404,6 @@ function initSidebar() {
             setActiveSidebarLink(this);
         });
     });
-    
-    // Add event listeners to quick simulation buttons
     quickSimButtons.forEach(btn => {
         btn.addEventListener('click', function() {
             if (!isSystemOn) return;
@@ -507,17 +411,12 @@ function initSidebar() {
             triggerQuickSimulation(level);
         });
     });
-    
-    // Initialize Intersection Observer for auto-scroll
     initAutoScrollObserver();
-    
-    // Update sidebar badges
     updateSidebarBadges();
     
     console.log('Sidebar initialized');
 }
 
-// Toggle sidebar
 function toggleSidebar() {
     if (isSidebarOpen) {
         closeSidebar();
@@ -542,11 +441,8 @@ function closeSidebar() {
     localStorage.setItem('sidebarState', 'closed');
 }
 
-// Navigate to section
 function navigateToSection(section) {
     console.log(`Navigating to section: ${section}`);
-    
-    // Disable auto-scroll temporarily during manual navigation
     const wasAutoScrollEnabled = isAutoScrollEnabled;
     if (wasAutoScrollEnabled) {
         isAutoScrollEnabled = false;
@@ -572,14 +468,13 @@ function navigateToSection(section) {
         case 'walls':
             scrollToElement('wall-checker');
             break;
-        case 'sms':
-            scrollToElement('sms-config');
+        case 'email':
+            scrollToElement('email-config');
             break;
         case 'export':
             downloadReadingsAsText();
             break;
         case 'simulation':
-            // Toggle auto simulation
             if (!isAutoSimulating && isSystemOn) {
                 autoSimulateBtn.click();
             }
@@ -588,8 +483,6 @@ function navigateToSection(section) {
             printReadingsReport();
             break;
     }
-    
-    // Re-enable auto-scroll after 2 seconds
     if (wasAutoScrollEnabled) {
         setTimeout(() => {
             isAutoScrollEnabled = true;
@@ -598,7 +491,6 @@ function navigateToSection(section) {
     }
 }
 
-// Trigger quick simulation from sidebar
 function triggerQuickSimulation(level) {
     if (!isSystemOn) {
         console.log('System is OFF, ignoring quick sim');
@@ -613,13 +505,13 @@ function triggerQuickSimulation(level) {
     let decibels;
     switch(level) {
         case 'quiet':
-            decibels = 50;      // fixed quiet value
+            decibels = 50;
             break;
         case 'moderate':
-            decibels = 80;      // fixed moderate value
+            decibels = 80;
             break;
         case 'loud':
-            decibels = 110;     // fixed loud value
+            decibels = 110;
             break;
         default:
             decibels = 80;
@@ -629,7 +521,6 @@ function triggerQuickSimulation(level) {
     updateNoiseDisplay(decibels);
 }
 
-// Scroll to element smoothly
 function scrollToElement(elementId) {
     const element = document.getElementById(elementId);
     if (element) {
@@ -640,7 +531,6 @@ function scrollToElement(elementId) {
     }
 }
 
-// Set active sidebar link
 function setActiveSidebarLink(linkElement) {
     sidebarLinks.forEach(link => {
         link.classList.remove('active');
@@ -649,7 +539,6 @@ function setActiveSidebarLink(linkElement) {
     activeSection = linkElement.dataset.section;
 }
 
-// Initialize auto-scroll observer
 function initAutoScrollObserver() {
     const sections = [
         { id: 'current-noise-level', section: 'noise' },
@@ -679,8 +568,6 @@ function initAutoScrollObserver() {
             }
         });
     }, observerOptions);
-    
-    // Observe all sections
     sections.forEach(section => {
         const element = document.getElementById(section.id);
         if (element) {
@@ -689,7 +576,6 @@ function initAutoScrollObserver() {
     });
 }
 
-// Update active sidebar link based on section
 function updateActiveSidebarLink(section) {
     sidebarLinks.forEach(link => {
         link.classList.remove('active');
@@ -699,7 +585,6 @@ function updateActiveSidebarLink(section) {
     });
 }
 
-// Update auto-scroll UI
 function updateAutoScrollUI() {
     if (isAutoScrollEnabled) {
         autoScrollStatus.textContent = 'ON';
@@ -711,36 +596,23 @@ function updateAutoScrollUI() {
     localStorage.setItem('autoScrollEnabled', isAutoScrollEnabled.toString());
 }
 
-// Update sidebar badges
 function updateSidebarBadges() {
-    // Update readings count
     const regularReadings = readingsHistory.filter(r => !r.isSystemEvent).length;
     readingsCount.textContent = regularReadings;
-    
-    // Update adviser count
     const presentAdvisers = advisers.filter(a => a.status === 'present').length;
     advisersBadge.textContent = presentAdvisers;
     sidebarAdviserCount.textContent = presentAdvisers;
-    
-    // Update schedules badge
     const activeSchedules = teacherSchedules.filter(s => s.isActive).length;
     schedulesBadge.textContent = `${activeSchedules}/${teacherSchedules.length}`;
-    
-    // Update wall composition
     const concreteWalls = Object.values(wallState).filter(type => type === 'concrete').length;
     const plywoodWalls = 4 - concreteWalls;
     wallsBadge.textContent = `${concreteWalls}C/${plywoodWalls}P`;
-    
-    // Update SMS status
-    smsBadge.textContent = smsSettings.enabled ? 'ON' : 'OFF';
-    smsBadge.style.color = smsSettings.enabled ? '#2ea043' : '#8b949e';
+    emailBadge.textContent = emailSettings.enabled ? 'ON' : 'OFF';
+    emailBadge.style.color = emailSettings.enabled ? '#2ea043' : '#8b949e';
 }
 
-// Update sidebar noise value
 function updateSidebarNoiseValue(decibels, status) {
     sidebarDbValue.textContent = `${decibels} dB`;
-    
-    // Update color based on status
     sidebarDbValue.className = 'sidebar-stat-value';
     if (status === 'Quiet') {
         sidebarDbValue.classList.add('color-quiet');
@@ -751,9 +623,22 @@ function updateSidebarNoiseValue(decibels, status) {
     }
 }
 
-// ========== REAL NOISE DATA FETCHING ==========
+let lastTimeSync = 0;
+const TIME_SYNC_INTERVAL_MS = 5 * 60 * 1000;
 
-// Fetch real noise data from NMS hardware
+async function syncTimeToDevice() {
+    if (!useRealHardware) return;
+    try {
+        const timeStr = getCurrentTime();
+        const res = await fetch('/api/time', {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: timeStr
+        });
+        if (res.ok) lastTimeSync = Date.now();
+    } catch (e) {}
+}
+
 async function fetchRealNoiseData() {
     if (!useRealHardware) {
         console.log('Simulation mode active - skipping hardware fetch');
@@ -765,45 +650,74 @@ async function fetchRealNoiseData() {
         if (response.ok) {
             const data = await response.json();
             console.log('Real noise data:', data);
-            
-            // Update display with real data
+            if (Date.now() - lastTimeSync > TIME_SYNC_INTERVAL_MS) {
+                syncTimeToDevice();
+            }
             updateNoiseDisplay(data.decibels);
-            
-            // Update hardware status
             updateHardwareStatus(data);
         }
     } catch (error) {
         console.error('Error fetching noise data:', error);
-        // Fallback to simulation if hardware not available
         if (isAutoSimulating) {
             stopAutoSimulation();
         }
     }
 }
 
-// Update hardware status indicators
 function updateHardwareStatus(data) {
-    // Update system status based on hardware state
     if (data.isAlarming) {
-        // Hardware is alarming
         console.log('Hardware alarm active');
     } else if (data.inCooldown) {
-        // Hardware is in cooldown
         console.log('Hardware in cooldown');
     }
+    if (data.emailSent) {
+        console.log('Email sent by hardware');
+        // Update UI to show email was sent by hardware
+        const lastReading = readingsHistory[0];
+        if (lastReading && lastReading.emailStatus !== 'Sent') {
+            lastReading.emailStatus = 'Sent';
+            lastReading.sessionInfo = 'Sent via ESP32 Gmail';
+            updateReadingsTable();
+        }
+    }
     
-    // Update SMS status
-    if (data.smsSent) {
-        console.log('SMS sent by hardware');
+    // Update Gmail connection status indicators
+    updateGmailStatus(data);
+}
+
+function updateGmailStatus(data) {
+    // Update footer email status based on hardware Gmail capability
+    const footerEmailStatusElement = document.getElementById('footerEmailStatus');
+    if (footerEmailStatusElement) {
+        if (data.emailSent !== undefined) {
+            footerEmailStatusElement.textContent = 'Gmail Ready';
+            footerEmailStatusElement.className = 'status-active';
+        } else {
+            footerEmailStatusElement.textContent = 'Gmail Unknown';
+            footerEmailStatusElement.className = 'status-inactive';
+        }
+    }
+    
+    // Update email badge to show Gmail status
+    const emailBadgeElement = document.getElementById('emailBadge');
+    if (emailBadgeElement) {
+        if (data.emailSent !== undefined) {
+            emailBadgeElement.textContent = 'Gmail';
+            emailBadgeElement.style.color = '#2ea043';
+        } else {
+            emailBadgeElement.textContent = 'Gmail?';
+            emailBadgeElement.style.color = '#f85149';
+        }
     }
 }
 
-// Sync phone numbers to SIM800L hardware
-async function syncPhoneNumbersToHardware() {
+async function syncEmailAddressesToHardware() {
     try {
-        // Clear existing phone numbers first
+        console.log('=== SYNCING GMAIL ADDRESSES TO ESP32 ===');
+        
+        // Clear existing email addresses on ESP32
         try {
-            const clearResponse = await fetch('/api/phone/clear', {
+            const clearResponse = await fetch('/api/email/clear', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -811,52 +725,72 @@ async function syncPhoneNumbersToHardware() {
             });
             
             if (clearResponse.ok) {
-                console.log('Cleared existing phone numbers');
+                console.log('✓ Cleared existing email addresses from ESP32');
+            } else {
+                console.warn('⚠ Failed to clear existing email addresses from ESP32');
             }
         } catch (error) {
-            console.error('Error clearing phone numbers:', error);
+            console.error('✗ Error clearing email addresses:', error);
         }
         
-        // Get present advisers who should receive SMS
+        // Get present advisers with Gmail addresses
         const presentAdvisers = advisers.filter(a => a.status === 'present');
         
         if (presentAdvisers.length === 0) {
             console.log('No present advisers to sync');
+            alert('No present advisers to sync to hardware.');
             return;
         }
-
-        // Send each phone number to hardware
+        
+        let successCount = 0;
+        let failureCount = 0;
+        
+        // Sync each adviser's Gmail address to ESP32
         for (const adviser of presentAdvisers) {
             try {
-                const response = await fetch('/api/phone', {
+                console.log(`Syncing Gmail: ${adviser.name} -> ${adviser.number}`);
+                
+                const response = await fetch('/api/email', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
                     },
-                    body: `plain=${encodeURIComponent(adviser.number)}`
+                    body: `email=${encodeURIComponent(adviser.number)}`
                 });
                 
                 if (response.ok) {
-                    console.log(`Synced phone: ${adviser.number}`);
+                    console.log(`✓ Synced Gmail: ${adviser.number}`);
+                    successCount++;
                 } else {
-                    console.error(`Failed to sync phone: ${adviser.number}`);
+                    console.error(`✗ Failed to sync Gmail: ${adviser.number} (Status: ${response.status})`);
+                    failureCount++;
                 }
             } catch (error) {
-                console.error(`Error syncing phone ${adviser.number}:`, error);
+                console.error(`✗ Error syncing Gmail ${adviser.number}:`, error);
+                failureCount++;
             }
+            
+            // Small delay between requests to avoid overwhelming the ESP32
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
         
-        console.log(`Synced ${presentAdvisers.length} phone numbers to hardware`);
-        alert(`Successfully synced ${presentAdvisers.length} phone numbers to hardware!`);
+        console.log(`=== GMAIL SYNC COMPLETE ===`);
+        console.log(`✓ Successfully synced: ${successCount} Gmail addresses`);
+        console.log(`✗ Failed to sync: ${failureCount} Gmail addresses`);
+        
+        // Show user-friendly result
+        if (successCount > 0) {
+            alert(`Successfully synced ${successCount} Gmail addresses to ESP32 hardware!${failureCount > 0 ? ` (${failureCount} failed)` : ''}`);
+        } else {
+            alert('Failed to sync any Gmail addresses to ESP32 hardware. Please check the console for details.');
+        }
+        
     } catch (error) {
-        console.error('Error syncing phone numbers:', error);
-        alert('Error syncing phone numbers. Please check console.');
+        console.error('✗ Critical error syncing Gmail addresses:', error);
+        alert('Critical error syncing Gmail addresses. Please check the console for details.');
     }
 }
 
-// ========== NOISE MONITORING ==========
-
-// Update time display
 function updateTime() {
     const now = new Date();
     const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -864,108 +798,101 @@ function updateTime() {
     lastUpdated.textContent = `${dateString} ${timeString}`;
 }
 
-// Update noise display based on decibel level
 function updateNoiseDisplay(decibels) {
     console.log(`Updating noise display with: ${decibels} dB`);
-
-    // Check if system is on
     if (!isSystemOn) {
         console.log('System is OFF, ignoring noise update');
         return;
     }
+    if (isBreakTime()) {
+        currentDecibels = decibels;
+        const measuredDecibels = applyWallAdjustments(decibels);
+        decibelValue.textContent = `${measuredDecibels} dB`;
+        decibelValue.className = 'decibel-value color-moderate';
+        noiseStatus.textContent = 'Break time';
+        noiseStatus.className = 'noise-status color-moderate';
+        let fillPct = ((measuredDecibels - 40) / 60) * 100;
+        if (fillPct < 0) fillPct = 0;
+        if (fillPct > 100) fillPct = 100;
+        indicatorFill.style.width = `${fillPct}%`;
+        indicatorFill.className = 'indicator-fill bg-moderate';
+        updateSidebarNoiseValue(measuredDecibels, 'Break time');
+        return;
+    }
 
     currentDecibels = decibels;
-
-    // Apply wall material adjustments
     const measuredDecibels = applyWallAdjustments(decibels);
     console.log(`After wall adjustments: ${measuredDecibels} dB`);
-
-    // Update the numeric display with ADJUSTED reading
     decibelValue.textContent = `${measuredDecibels} dB`;
-
-    // Determine status and color based on ADJUSTED reading
     let status = '';
     let colorClass = '';
-    let shouldSendSms = false;
+    let shouldSendEmail = false;
 
     if (measuredDecibels < 60) {
         status = 'Quiet';
         colorClass = 'quiet';
-        shouldSendSms = false;
+        shouldSendEmail = false;
     } else if (measuredDecibels <= 99) {
         status = 'Moderate';
         colorClass = 'moderate';
-        shouldSendSms = false;
+        shouldSendEmail = false;
     } else {
         status = 'Loud';
         colorClass = 'loud';
-        shouldSendSms = true;
+        shouldSendEmail = true;
     }
 
-    console.log(`Status: ${status}, Color: ${colorClass}, Send SMS: ${shouldSendSms}`);
-
-    // Apply colors
+    console.log(`Status: ${status}, Color: ${colorClass}, Send Email: ${shouldSendEmail}`);
     decibelValue.className = 'decibel-value color-' + colorClass;
     noiseStatus.className = 'noise-status color-' + colorClass;
     noiseStatus.textContent = status;
-
-    // Update indicator bar
     let fillPercentage = ((measuredDecibels - 40) / 60) * 100;
     if (fillPercentage < 0) fillPercentage = 0;
     if (fillPercentage > 100) fillPercentage = 100;
 
     indicatorFill.style.width = `${fillPercentage}%`;
     indicatorFill.className = 'indicator-fill bg-' + colorClass;
-
-    // Update sidebar noise value
     updateSidebarNoiseValue(measuredDecibels, status);
-
-    // Check if we should send SMS
-    let smsStatusText = 'Not Sent';
-    let smsRecipients = [];
+    let emailStatusText = 'Not Sent';
+    let emailRecipients = [];
     let sessionInfo = '';
 
-    if (shouldSendSms && smsSettings.enabled && isSystemOn) {
+    if (shouldSendEmail && emailSettings.enabled && isSystemOn) {
         const presentAdvisers = advisers.filter(a => a.status === 'present');
         if (presentAdvisers.length > 0) {
-            // Check cooldown first
-            if (smsCooldown.enabled && isOnCooldown()) {
-                smsStatusText = 'On Cooldown';
-                sessionInfo = 'System on cooldown';
+            if (emailCooldown.enabled && isOnCooldown()) {
+                emailStatusText = 'On Cooldown';
+                sessionInfo = 'Resets next session';
             } else {
-                // Filter by schedule
                 const scheduledAdvisers = presentAdvisers.filter(adviser =>
                     isTeacherScheduled(adviser.id)
                 );
 
                 if (scheduledAdvisers.length > 0) {
-                    smsRecipients = scheduledAdvisers.map(a => a.name);
-                    const smsResult = sendSMS(measuredDecibels, status, scheduledAdvisers.map(a => a.name));
-                    smsStatusText = smsResult ? 'Sent' : 'Failed';
-                    sessionInfo = smsResult ? `${scheduledAdvisers.length} advisers notified` : 'Send failed';
+                    emailRecipients = scheduledAdvisers.map(a => a.name);
+                    const emailResult = sendEmail(measuredDecibels, status, scheduledAdvisers.map(a => a.name));
+                    emailStatusText = emailResult ? 'Sent' : 'Failed';
+                    sessionInfo = emailResult ? `${scheduledAdvisers.length} advisers notified` : 'Send failed';
                 } else {
-                    smsStatusText = 'No Scheduled Advisers';
+                    emailStatusText = 'No Scheduled Advisers';
                     sessionInfo = 'No advisers scheduled for current time';
                 }
             }
         } else {
-            smsStatusText = 'No Active Advisers';
+            emailStatusText = 'No Active Advisers';
             sessionInfo = 'No present advisers';
         }
-    } else if (!smsSettings.enabled) {
-        smsStatusText = 'Disabled';
-        sessionInfo = 'SMS disabled';
+    } else if (!emailSettings.enabled) {
+        emailStatusText = 'Disabled';
+        sessionInfo = 'Email disabled';
     } else if (!isSystemOn) {
-        smsStatusText = 'System OFF';
+        emailStatusText = 'System OFF';
         sessionInfo = 'System is turned off';
     }
-
-    // Update reading history with session info
-    addToHistory(decibels, measuredDecibels, status, smsStatusText, smsRecipients, sessionInfo);
+    addToHistory(decibels, measuredDecibels, status, emailStatusText, emailRecipients, sessionInfo);
     saveState();
 }
 
-// Apply wall material adjustments
 function applyWallAdjustments(originalDecibels) {
     let concreteWalls = 0;
     let plywoodWalls = 0;
@@ -974,35 +901,21 @@ function applyWallAdjustments(originalDecibels) {
         if (type === 'concrete') concreteWalls++;
         else plywoodWalls++;
     });
-
-    // CORRECTED: For noise generated INSIDE the classroom:
-    // Concrete walls: keep noise in → higher reading
-    // Plywood walls: noise escapes → lower reading
-
-    const concreteRetention = 0.8; // 80% of noise stays in concrete room
-    const plywoodRetention = 0.4; // 40% of noise stays in plywood room
-
+    const concreteRetention = 0.8;
+    const plywoodRetention = 0.4;
     const totalWalls = 4;
     const averageRetention = (concreteWalls * concreteRetention + plywoodWalls * plywoodRetention) / totalWalls;
-
-    // Apply retention factor to get measured noise INSIDE the classroom
     const measuredDecibels = originalDecibels * averageRetention;
-
-    // Add ambient noise (10 dB base level)
     const ambientNoise = 10;
     const finalReading = Math.round(measuredDecibels + ambientNoise);
-
-    // Clamp between 0 and 120 dB
     return Math.max(0, Math.min(120, finalReading));
 }
 
-// Generate random decibel value
 function getRandomDecibels(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// Add reading to history
-function addToHistory(originalDecibels, measuredDecibels, status, smsStatus, recipients = [], sessionInfo = '') {
+function addToHistory(originalDecibels, measuredDecibels, status, emailStatus, recipients = [], sessionInfo = '') {
     const timeString = getCurrentTimeWithSeconds();
 
     const reading = {
@@ -1010,7 +923,7 @@ function addToHistory(originalDecibels, measuredDecibels, status, smsStatus, rec
         originalDecibels: originalDecibels,
         measuredDecibels: measuredDecibels,
         status: status,
-        smsStatus: smsStatus,
+        emailStatus: emailStatus,
         recipients: recipients,
         sessionInfo: sessionInfo,
         wallComposition: `${concreteCount.textContent}C/${plywoodCount.textContent}P`
@@ -1022,7 +935,6 @@ function addToHistory(originalDecibels, measuredDecibels, status, smsStatus, rec
     updateSidebarBadges();
 }
 
-// Update readings table
 function updateReadingsTable() {
     readingsTable.innerHTML = '';
 
@@ -1039,8 +951,6 @@ function updateReadingsTable() {
 
     readingsHistory.forEach(reading => {
         const row = document.createElement('tr');
-
-        // Handle system event readings differently
         if (reading.isSystemEvent) {
             row.innerHTML = `
                 <td>${reading.time}</td>
@@ -1063,12 +973,8 @@ function updateReadingsTable() {
         const statusClass = reading.status.toLowerCase();
         const statusBadge = `<span class="status-badge ${statusClass}">${reading.status}</span>`;
 
-        let smsBadgeClass = '';
-        if (reading.smsStatus === 'Sent') smsBadgeClass = 'sent';
-        else if (reading.smsStatus === 'Failed') smsBadgeClass = 'not-sent';
-        else smsBadgeClass = 'disabled';
-
-        const smsBadge = `<span class="sms-badge ${smsBadgeClass}">${reading.smsStatus}</span>`;
+        const email = reading.emailStatus === 'Sent' ? 'sent' : 'not-sent';
+        const emailBadge = `<span class="email-badge ${email}">${reading.emailStatus}</span>`;
 
         const adjustment = reading.measuredDecibels - reading.originalDecibels;
         const arrow = adjustment > 0 ? '↑' : (adjustment < 0 ? '↓' : '→');
@@ -1086,9 +992,9 @@ function updateReadingsTable() {
                 <span class="adjustment-arrow">${arrow}</span>
             </td>
             <td>${statusBadge}</td>
-            <td>${smsBadge}</td>
+            <td>${emailBadge}</td>
             <td class="session-info">
-                <div class="sms-recipients" title="${reading.recipients.join(', ')}">
+                <div class="email-recipients" title="${reading.recipients.join(', ')}">
                     ${recipientsText}
                 </div>
                 ${reading.sessionInfo ? `<div class="session-cooldown">${reading.sessionInfo}</div>` : ''}
@@ -1099,93 +1005,41 @@ function updateReadingsTable() {
     });
 }
 
-// ========== ADVISER MANAGEMENT ==========
-//
-// Phone number helpers (Philippines format)
-function sanitizePhoneInput(value) {
-    if (!value) return '';
-    const digitsOnly = value.replace(/\D/g, '');
-    return digitsOnly.slice(0, 11);
-}
-
-function formatPhilippinesNumber(value) {
-    const digits = (value || '').replace(/\D/g, '');
-
-    if (digits.length !== 11) {
-        return digits;
+function validateEmail(email) {
+    if (!email) return { ok: false, message: 'Email address is required', formatted: '' };
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return { ok: false, message: 'Please enter a valid email address', formatted: '' };
     }
-
-    let core = digits;
-    if (core.startsWith('0')) {
-        core = core.slice(1);
-    }
-
-    if (core.length !== 10) {
-        return digits;
-    }
-
-    const part1 = core.slice(0, 3);
-    const part2 = core.slice(3, 6);
-    const part3 = core.slice(6);
-
-    return `+63 ${part1} ${part2} ${part3}`;
-}
-
-function validateAndFormatPhoneNumber(value) {
-    let digits = (value || '').toString().replace(/\D/g, '');
-
-    // Handle numbers that are already in +63 format
-    if (digits.startsWith('63') && digits.length >= 12) {
-        // Convert 63XXXXXXXXXX → 0XXXXXXXXXX (keep last 10 digits)
-        digits = '0' + digits.slice(digits.length - 10);
-    }
-
-    // If still longer than 11, keep the last 11 digits
-    if (digits.length > 11) {
-        digits = digits.slice(-11);
-    }
-
-    if (digits.length !== 11) {
-        return {
-            ok: false,
-            message: 'Contact number must be exactly 11 digits.',
-            formatted: ''
+    
+    // Prefer Gmail addresses but allow other domains for flexibility
+    const lowerEmail = email.toLowerCase();
+    if (!lowerEmail.includes('@gmail.com') && !lowerEmail.includes('@googlemail.com')) {
+        return { 
+            ok: false, 
+            message: 'Gmail addresses are recommended for best compatibility (@gmail.com or @googlemail.com)', 
+            formatted: '' 
         };
     }
-
-    if (!digits.startsWith('09')) {
-        return {
-            ok: false,
-            message: 'Contact number must start with 09.',
-            formatted: ''
-        };
-    }
-
-    return {
-        ok: true,
-        message: '',
-        formatted: formatPhilippinesNumber(digits)
-    };
+    
+    return { ok: true, message: '', formatted: lowerEmail };
 }
 
-// Apply phone input behavior to adviser contact fields
 if (adviserNumberInput) {
     adviserNumberInput.addEventListener('input', function() {
-        this.value = sanitizePhoneInput(this.value);
+        // Convert to lowercase for Gmail addresses
+        this.value = this.value.toLowerCase();
     });
 }
 
 if (editAdviserNumber) {
     editAdviserNumber.addEventListener('input', function() {
-        this.value = sanitizePhoneInput(this.value);
-    });
-
-    editAdviserNumber.addEventListener('blur', function() {
-        this.value = formatPhilippinesNumber(this.value);
+        // Convert to lowercase for Gmail addresses
+        this.value = this.value.toLowerCase();
     });
 }
 
-// Update advisers table
 function updateAdvisersTable() {
     advisersTable.innerHTML = '';
 
@@ -1201,8 +1055,6 @@ function updateAdvisersTable() {
         advisersTable.appendChild(row);
         return;
     }
-
-    // Update counts
     const present = advisers.filter(a => a.status === 'present').length;
     const onLeave = advisers.filter(a => a.status === 'on-leave').length;
     const absent = advisers.filter(a => a.status === 'absent').length;
@@ -1211,19 +1063,11 @@ function updateAdvisersTable() {
     onLeaveCount.textContent = onLeave;
     absentCount.textContent = absent;
     activeAdvisers.textContent = present;
-
-    // Update footer
     footerAdviserStatus.textContent = `${present} Present`;
     adviserSystemStatus.textContent = present > 0 ? 'Active' : 'No Active Advisers';
     adviserSystemStatus.className = present > 0 ? 'status-value' : 'status-value warning';
-
-    // Update schedule dropdown
     updateScheduleAdviserDropdown();
-
-    // Update sidebar
     updateSidebarBadges();
-
-    // Populate table
     advisers.forEach(adviser => {
         const row = document.createElement('tr');
         row.dataset.id = adviser.id;
@@ -1245,8 +1089,6 @@ function updateAdvisersTable() {
 
         advisersTable.appendChild(row);
     });
-
-    // Add event listeners to action buttons
     document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', function() {
             if (!isSystemOn) return;
@@ -1264,7 +1106,6 @@ function updateAdvisersTable() {
     });
 }
 
-// Add new adviser
 addAdviserBtn.addEventListener('click', function() {
     if (!isSystemOn) {
         alert('System is OFF. Turn on the system to add advisers.');
@@ -1280,17 +1121,15 @@ addAdviserBtn.addEventListener('click', function() {
         alert('Please fill in all fields');
         return;
     }
-
-    // Validate that name doesn't contain integers
     if (/\d/.test(name)) {
         alert('Adviser name cannot contain integers/numbers');
         adviserNameInput.focus();
         return;
     }
 
-    const phoneResult = validateAndFormatPhoneNumber(rawNumber);
-    if (!phoneResult.ok) {
-        alert(phoneResult.message);
+    const emailResult = validateEmail(rawNumber);
+    if (!emailResult.ok) {
+        alert(emailResult.message);
         adviserNumberInput.focus();
         return;
     }
@@ -1299,15 +1138,13 @@ addAdviserBtn.addEventListener('click', function() {
         id: Date.now(),
         name,
         subject,
-        number: phoneResult.formatted,
+        number: emailResult.formatted,
         status
     };
 
     advisers.push(newAdviser);
     saveAdvisers();
     updateAdvisersTable();
-
-    // Clear form
     adviserNameInput.value = '';
     adviserSubjectInput.value = '';
     adviserNumberInput.value = '';
@@ -1317,8 +1154,6 @@ addAdviserBtn.addEventListener('click', function() {
 
     alert('Adviser added successfully!');
 });
-
-// Open edit modal
 function openEditModal(id) {
     if (!isSystemOn) return;
 
@@ -1333,8 +1168,6 @@ function openEditModal(id) {
 
     editModalOverlay.classList.add('active');
 }
-
-// Close edit modal
 function closeEditModalFunc() {
     editModalOverlay.classList.remove('active');
     editingAdviserId = null;
@@ -1343,8 +1176,6 @@ function closeEditModalFunc() {
     editAdviserNumber.value = '';
     editAdviserStatus.value = 'present';
 }
-
-// Save edited adviser
 saveAdviserBtn.addEventListener('click', function() {
     if (!isSystemOn) return;
 
@@ -1361,17 +1192,15 @@ saveAdviserBtn.addEventListener('click', function() {
         alert('Please fill in all fields');
         return;
     }
-
-    // Validate that edited name doesn't contain integers
     if (/\d/.test(editedName)) {
         alert('Adviser name cannot contain integers/numbers');
         editAdviserName.focus();
         return;
     }
 
-    const phoneResult = validateAndFormatPhoneNumber(editedRawNumber);
-    if (!phoneResult.ok) {
-        alert(phoneResult.message);
+    const emailResult = validateEmail(editedRawNumber);
+    if (!emailResult.ok) {
+        alert(emailResult.message);
         editAdviserNumber.focus();
         return;
     }
@@ -1380,7 +1209,7 @@ saveAdviserBtn.addEventListener('click', function() {
         ...advisers[adviserIndex],
         name: editedName,
         subject: editedSubject,
-        number: phoneResult.formatted,
+        number: emailResult.formatted,
         status: editAdviserStatus.value
     };
 
@@ -1389,8 +1218,6 @@ saveAdviserBtn.addEventListener('click', function() {
     closeEditModalFunc();
     alert('Adviser updated successfully!');
 });
-
-// Delete adviser
 function deleteAdviser(id) {
     if (!isSystemOn) {
         alert('System is OFF. Turn on the system to delete advisers.');
@@ -1398,11 +1225,7 @@ function deleteAdviser(id) {
     }
 
     if (!confirm('Are you sure you want to delete this adviser?')) return;
-
-    // Remove adviser
     advisers = advisers.filter(a => a.id !== id);
-
-    // Remove schedules for this adviser
     teacherSchedules = teacherSchedules.filter(schedule => schedule.teacherId !== id);
 
     saveAdvisers();
@@ -1411,254 +1234,178 @@ function deleteAdviser(id) {
     updateSchedulesTable();
     alert('Adviser and associated schedules deleted successfully!');
 }
-
-// ========== SMS SYSTEM ==========
-
-// Send SMS to advisers (with schedule check)
-function sendSMS(decibels, status, recipients) {
-    console.log(`\n=== SMS SENDING PROCESS ===`);
+async function sendEmail(decibels, status, recipients) {
+    console.log(`\n=== GMAIL SENDING PROCESS ===`);
     console.log(`Time: ${getCurrentTime()}, Day: ${getCurrentDay()}`);
     console.log(`Recipients: ${recipients.join(', ')}`);
     
     if (!recipients || recipients.length === 0) {
-        console.log('SMS blocked: No recipients specified');
+        console.log('Email blocked: No recipients specified');
         return false;
     }
-
-    // Check if system is on
     if (!isSystemOn) {
-        console.log('SMS blocked: System is OFF');
+        console.log('Email blocked: System is OFF');
         return false;
     }
-
-    // Check cooldown
-    if (smsCooldown.enabled && isOnCooldown()) {
-        console.log('SMS blocked: System is on cooldown');
+    if (emailCooldown.enabled && isOnCooldown()) {
+        console.log('Email blocked: All scheduled advisers already notified this session');
         return false;
     }
-
-    // Filter recipients by schedule and status
     const validRecipients = recipients.filter(recipient => {
         const adviser = advisers.find(a => a.name === recipient);
-        
         if (!adviser) {
             console.log(`- ${recipient}: Not found in advisers list`);
             return false;
         }
-        
         if (adviser.status !== 'present') {
             console.log(`- ${recipient}: Status is ${adviser.status} (needs to be present)`);
             return false;
         }
-        
-        // Check if adviser is scheduled for current time
-        const isScheduled = isTeacherScheduled(adviser.id);
-        
-        if (!isScheduled) {
+        if (!isTeacherScheduled(adviser.id)) {
             console.log(`- ${recipient}: Not scheduled for current time`);
             return false;
         }
-        
-        console.log(`- ✓ ${recipient}: Present and scheduled`);
+        if (wasAdviserNotifiedInCurrentSession(adviser.id)) {
+            console.log(`- ${recipient}: Already notified this session (one per session)`);
+            return false;
+        }
+        console.log(`- ✓ ${recipient}: Present, scheduled, and not yet notified this session`);
         return true;
     });
 
     console.log(`Valid recipients: ${validRecipients.length} out of ${recipients.length}`);
-    
     if (validRecipients.length === 0) {
-        console.log('SMS blocked: No valid recipients (not scheduled or not present)');
+        console.log('Email blocked: No valid recipients (not scheduled, not present, or already notified this session)');
         return false;
     }
 
-    // Simulate SMS sending (90% success rate)
-    const success = Math.random() < 0.9;
+    // Get Gmail addresses for valid recipients
+    const gmailAddresses = validRecipients.map(name => {
+        const adviser = advisers.find(a => a.name === name);
+        return adviser ? adviser.number : null;
+    }).filter(email => email !== null);
 
-    if (success) {
-        // Update SMS stats
-        smsSettings.totalSent += validRecipients.length;
-        totalSmsSent.textContent = smsSettings.totalSent;
+    if (gmailAddresses.length === 0) {
+        console.log('Email blocked: No valid Gmail addresses found');
+        return false;
+    }
 
-        // Set cooldown
-        if (smsCooldown.enabled) {
-            setCooldown();
+    try {
+        // Trigger email sending via ESP32 hardware
+        console.log('Triggering Gmail sending via ESP32 hardware...');
+        
+        // Use the new email trigger endpoint
+        const triggerResponse = await fetch('/api/email/trigger', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+        
+        if (triggerResponse.ok) {
+            const result = await triggerResponse.text();
+            console.log('✓ Gmail trigger response:', result);
+        } else {
+            console.warn('⚠ Gmail trigger failed:', triggerResponse.status);
+            throw new Error('ESP32 email trigger failed');
         }
 
-        // Log SMS session
-        logSmsSession(decibels, status, validRecipients);
+        // Mark advisers as notified in this session
+        validRecipients.forEach(name => {
+            const adviser = advisers.find(a => a.name === name);
+            if (adviser) {
+                const sessionKey = getCurrentSessionKeyForAdviser(adviser.id);
+                if (sessionKey) adviserNotifiedInSession[adviser.id] = sessionKey;
+            }
+        });
 
-        // Save settings
-        saveSmsSettings();
-        saveCooldownSettings();
-        saveSmsSessions();
+        // Update email statistics
+        emailSettings.totalSent += validRecipients.length;
+        totalEmailsSent.textContent = emailSettings.totalSent;
+        
+        logEmailSession(decibels, status, validRecipients);
+        saveEmailSettings();
+        saveAdviserNotifiedInSession();
+        saveEmailSessions();
 
-        console.log(`✓ SMS sent to ${validRecipients.length} scheduled/present advisers: "${validRecipients.join(', ')}"`);
+        console.log(`✓ Gmail triggered for ${validRecipients.length} scheduled/present advisers: "${validRecipients.join(', ')}"`);
+        console.log(`✓ Email addresses: ${gmailAddresses.join(', ')}`);
         return true;
-    } else {
-        console.log('✗ SMS failed to send (simulated failure)');
+        
+    } catch (error) {
+        console.error('✗ Gmail trigger failed:', error);
         return false;
     }
 }
-
-// Check if system is on cooldown
 function isOnCooldown() {
-    if (!smsCooldown.lastSmsTime || !smsCooldown.cooldownEnd) return false;
-
-    const now = new Date();
-    const cooldownEnd = new Date(smsCooldown.cooldownEnd);
-
-    return now < cooldownEnd;
+    const scheduledAdvisers = advisers.filter(a =>
+        a.status === 'present' && getCurrentSessionKeyForAdviser(a.id) !== null
+    );
+    if (scheduledAdvisers.length === 0) return false;
+    return scheduledAdvisers.every(a => wasAdviserNotifiedInCurrentSession(a.id));
 }
-
-// Set cooldown after SMS
 function setCooldown() {
-    const now = new Date();
-    smsCooldown.lastSmsTime = now.toISOString();
-
-    // Calculate cooldown end time
-    const cooldownMs = (smsCooldown.hours * 60 + smsCooldown.minutes) * 60 * 1000;
-    const cooldownEnd = new Date(now.getTime() + cooldownMs);
-    smsCooldown.cooldownEnd = cooldownEnd.toISOString();
-
-    updateCooldownUI();
 }
-
-// Check if adviser is scheduled for current time
-function isTeacherScheduled(adviserId) {
+function getCurrentSessionKeyForAdviser(adviserId) {
     const currentDay = getCurrentDay();
     const currentTime = getCurrentTime();
-    
-    console.log(`Checking schedule for adviser ${adviserId}:`);
-    console.log(`- Current day: ${currentDay}, Current time: ${currentTime}`);
-    
-    // Find all active schedules for this adviser
-    const activeSchedules = teacherSchedules.filter(schedule => 
-        schedule.teacherId === adviserId && 
-        schedule.isActive === true
+    const activeSchedules = teacherSchedules.filter(s =>
+        s.teacherId === adviserId && s.isActive === true && s.day === currentDay
     );
-    
-    if (activeSchedules.length === 0) {
-        console.log(`- No active schedules found for adviser ${adviserId}`);
-        return false;
-    }
-    
-    // Check each schedule
     for (const schedule of activeSchedules) {
-        console.log(`- Checking schedule: ${schedule.day} ${schedule.startTime}-${schedule.endTime}`);
-        
-        // Check if day matches
-        if (schedule.day !== currentDay) {
-            continue;
-        }
-        
-        // Check if time is within range
-        const isWithinTime = isTimeInRange(currentTime, schedule.startTime, schedule.endTime);
-        
-        if (isWithinTime) {
-            console.log(`- ✓ Schedule matches! Adviser ${adviserId} is scheduled for current time`);
-            return true;
+        if (isTimeInRange(currentTime, schedule.startTime, schedule.endTime)) {
+            return `${currentDay}_${schedule.startTime}_${schedule.endTime}`;
         }
     }
-    
-    console.log(`- ✗ No matching schedule found for current time`);
-    return false;
+    return null;
 }
-
-// Update SMS settings UI
-function updateSmsSettingsUI() {
-    enableSmsToggle.checked = smsSettings.enabled;
-    smsTemplate.value = smsSettings.template;
-    totalSmsSent.textContent = smsSettings.totalSent;
-
-    // Update footer
-    footerSmsStatus.textContent = smsSettings.enabled ? 'Enabled' : 'Disabled';
-    footerSmsStatus.className = smsSettings.enabled ? 'status-active' : 'status-value warning';
-
-    // Update sidebar
+function wasAdviserNotifiedInCurrentSession(adviserId) {
+    const key = getCurrentSessionKeyForAdviser(adviserId);
+    return key !== null && adviserNotifiedInSession[adviserId] === key;
+}
+function isTeacherScheduled(adviserId) {
+    return getCurrentSessionKeyForAdviser(adviserId) !== null;
+}
+function updateEmailSettingsUI() {
+    enableEmailToggle.checked = emailSettings.enabled;
+    emailTemplate.value = emailSettings.template;
+    totalEmailsSent.textContent = emailSettings.totalSent;
+    footerEmailStatus.textContent = emailSettings.enabled ? 'Enabled' : 'Disabled';
+    footerEmailStatus.className = emailSettings.enabled ? 'status-active' : 'status-value warning';
     updateSidebarBadges();
 }
-
-// Enable SMS toggle
-enableSmsToggle.addEventListener('change', function() {
+enableEmailToggle.addEventListener('change', function() {
     if (!isSystemOn) {
-        this.checked = !this.checked; // Revert the change
-        alert('System is OFF. Turn on the system to change SMS settings.');
+        this.checked = !this.checked;
+        alert('System is OFF. Turn on the system to change email settings.');
         return;
     }
     
-    smsSettings.enabled = this.checked;
-    saveSmsSettings();
-    updateSmsSettingsUI();
+    emailSettings.enabled = this.checked;
+    saveEmailSettings();
+    updateEmailSettingsUI();
 });
-
-// SMS template change
-smsTemplate.addEventListener('change', function() {
+emailTemplate.addEventListener('change', function() {
     if (!isSystemOn) return;
     
-    smsSettings.template = this.value;
-    saveSmsSettings();
+    emailSettings.template = this.value;
+    saveEmailSettings();
 });
-
-// Broadcast SMS to all present advisers
-smsAllBtn.addEventListener('click', function() {
-    if (!isSystemOn) {
-        alert('System is OFF. Turn on the system to send SMS.');
-        return;
-    }
-
-    const presentAdvisers = advisers.filter(a => a.status === 'present');
-    if (presentAdvisers.length === 0) {
-        alert('No present advisers to send SMS to');
-        return;
-    }
-
-    // Get current time info for the alert
-    const currentDay = getCurrentDay();
-    const currentTime = getCurrentTime();
-    const currentTimeDisplay = formatTimeForDisplay(currentTime);
-    
-    const message = `Send test SMS to ${presentAdvisers.length} present adviser(s)?\n\n` +
-                   `Current Time: ${currentTimeDisplay}\n` +
-                   `Current Day: ${capitalizeFirst(currentDay)}\n\n` +
-                   `Note: SMS will only be sent to advisers who are:\n` +
-                   `1. Marked as "Present"\n` +
-                   `2. Have an active schedule for ${currentTimeDisplay} on ${capitalizeFirst(currentDay)}`;
-    
-    if (confirm(message)) {
-        const success = sendSMS(85, 'Loud (Test)', presentAdvisers.map(a => a.name));
-        if (success) {
-            alert(`✓ Test SMS sent successfully!\n\n` +
-                  `Check the Recent Readings table for details on which advisers received the SMS.`);
-        } else {
-            alert(`✗ Failed to send test SMS.\n\n` +
-                  `Possible reasons:\n` +
-                  `• No advisers are scheduled for current time (${currentTimeDisplay})\n` +
-                  `• System is on cooldown\n` +
-                  `• Check console for detailed logs`);
-        }
-    }
-});
-
-// Update cooldown UI
 function updateCooldownUI() {
-    // Start auto-update for cooldown timer
     startCooldownTimer();
 }
-
-// Start auto-update timer for cooldown
 function startCooldownTimer() {
-    if (smsCooldownTimer) clearInterval(smsCooldownTimer);
+    if (emailCooldownTimer) clearInterval(emailCooldownTimer);
 
-    smsCooldownTimer = setInterval(() => {
+    emailCooldownTimer = setInterval(() => {
         if (isOnCooldown()) {
             updateCooldownUI();
         } else {
-            clearInterval(smsCooldownTimer);
+            clearInterval(emailCooldownTimer);
         }
     }, 60000);
 }
-
-// Log SMS session
-function logSmsSession(decibels, status, recipients) {
+function logEmailSession(decibels, status, recipients) {
     const session = {
         id: Date.now(),
         timestamp: new Date().toISOString(),
@@ -1668,24 +1415,13 @@ function logSmsSession(decibels, status, recipients) {
         recipientCount: recipients.length
     };
 
-    smsSessions.unshift(session);
-
-    // Keep only last 20 sessions
-    if (smsSessions.length > 20) {
-        smsSessions.pop();
-    }
-
-    updateSmsLog();
+    emailSessions.unshift(session);
+    if (emailSessions.length > 100) emailSessions.pop();
+    console.log(`Email session logged: ${recipients.length} recipients for ${decibels}dB ${status}`);
 }
 
-function updateSmsLog() {
-    // This function updates the SMS log display (if you have one)
-    // Implement based on your needs
+function updateEmailLog() {
 }
-
-// ========== SCHEDULE MANAGEMENT ==========
-
-// Update schedule adviser dropdown
 function updateScheduleAdviserDropdown() {
     scheduleAdviserSelect.innerHTML = '<option value="">Select Adviser</option>';
     
@@ -1698,8 +1434,6 @@ function updateScheduleAdviserDropdown() {
         scheduleAdviserSelect.appendChild(option);
     });
 }
-
-// Check if schedule has conflicts
 function hasScheduleConflict(adviserId, day, startTime, endTime, excludeScheduleId = null) {
     const sameDaySchedules = teacherSchedules.filter(schedule => 
         schedule.teacherId === adviserId && 
@@ -1708,7 +1442,6 @@ function hasScheduleConflict(adviserId, day, startTime, endTime, excludeSchedule
     );
     
     for (const schedule of sameDaySchedules) {
-        // Check for time overlap
         const scheduleStart = schedule.startTime;
         const scheduleEnd = schedule.endTime;
         
@@ -1723,8 +1456,6 @@ function hasScheduleConflict(adviserId, day, startTime, endTime, excludeSchedule
     
     return false;
 }
-
-// Add or update schedule
 function saveSchedule() {
     if (!isSystemOn) {
         alert('System is OFF. Turn on the system to save schedules.');
@@ -1736,8 +1467,6 @@ function saveSchedule() {
     const startTime = scheduleStartTime.value;
     const endTime = scheduleEndTime.value;
     const isActive = scheduleActive.checked;
-    
-    // Validation
     if (!adviserId) {
         alert('Please select an adviser');
         return;
@@ -1752,8 +1481,6 @@ function saveSchedule() {
         alert('End time must be after start time');
         return;
     }
-    
-    // Check for schedule conflicts
     if (hasScheduleConflict(adviserId, day, startTime, endTime, editingScheduleId)) {
         if (!confirm('This schedule overlaps with an existing schedule. Do you want to continue?')) {
             return;
@@ -1761,7 +1488,6 @@ function saveSchedule() {
     }
     
     if (editingScheduleId) {
-        // Update existing schedule
         const scheduleIndex = teacherSchedules.findIndex(s => s.id === editingScheduleId);
         if (scheduleIndex !== -1) {
             teacherSchedules[scheduleIndex] = {
@@ -1774,7 +1500,6 @@ function saveSchedule() {
             };
         }
     } else {
-        // Add new schedule
         const newSchedule = {
             id: Date.now(),
             teacherId: adviserId,
@@ -1792,8 +1517,6 @@ function saveSchedule() {
     clearScheduleFormFunc();
     alert('Schedule saved successfully!');
 }
-
-// Update schedules table
 function updateSchedulesTable() {
     schedulesTable.innerHTML = '';
     
@@ -1807,7 +1530,6 @@ function updateSchedulesTable() {
         `;
         schedulesTable.appendChild(row);
     } else {
-        // Sort schedules by day and time
         const dayOrder = {
             'monday': 1, 'tuesday': 2, 'wednesday': 3,
             'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 7
@@ -1824,8 +1546,6 @@ function updateSchedulesTable() {
             const adviser = advisers.find(a => a.id === schedule.teacherId);
             const row = document.createElement('tr');
             row.dataset.id = schedule.id;
-            
-            // Check if this schedule is currently active
             const currentDay = getCurrentDay();
             const currentTime = getCurrentTime();
             
@@ -1836,8 +1556,6 @@ function updateSchedulesTable() {
                 row.classList.add('current-schedule');
                 isCurrent = true;
             }
-            
-            // Check for overlaps
             const hasOverlap = hasScheduleConflict(schedule.teacherId, schedule.day, 
                 schedule.startTime, schedule.endTime, schedule.id);
             if (hasOverlap) {
@@ -1892,25 +1610,15 @@ function updateSchedulesTable() {
             schedulesTable.appendChild(row);
         });
     }
-    
-    // Update schedule counts
     const activeSchedules = teacherSchedules.filter(s => s.isActive).length;
     activeSchedulesCount.textContent = activeSchedules;
     totalSchedulesCount.textContent = teacherSchedules.length;
-    
-    // Update schedule statistics
     updateScheduleStatistics();
-    
-    // Update sidebar badge
     updateSidebarBadges();
 }
-
-// Update schedule statistics
 function updateScheduleStatistics() {
     const currentDay = getCurrentDay();
     const currentTime = getCurrentTime();
-    
-    // Count currently scheduled advisers
     const currentlyScheduledAdvisers = new Set();
     
     teacherSchedules.forEach(schedule => {
@@ -1920,11 +1628,8 @@ function updateScheduleStatistics() {
             currentlyScheduledAdvisers.add(schedule.teacherId);
         }
     });
-    
-    // Count present advisers who are off-schedule
     const presentAdvisers = advisers.filter(a => a.status === 'present');
     const offScheduleAdvisers = presentAdvisers.filter(adviser => {
-        // Check if adviser has any active schedule for current time
         return !teacherSchedules.some(schedule =>
             schedule.teacherId === adviser.id &&
             schedule.isActive &&
@@ -1935,12 +1640,8 @@ function updateScheduleStatistics() {
     
     currentlyScheduled.textContent = currentlyScheduledAdvisers.size;
     offSchedule.textContent = offScheduleAdvisers.length;
-    
-    // Calculate next SMS window
     let nextWindow = '--:--';
     const currentMinutes = timeToMinutes(currentTime);
-    
-    // Get all future schedule times for today
     const futureSchedules = teacherSchedules.filter(schedule => {
         if (!schedule.isActive || schedule.day !== currentDay) return false;
         
@@ -1949,7 +1650,6 @@ function updateScheduleStatistics() {
     });
     
     if (futureSchedules.length > 0) {
-        // Find the next schedule
         futureSchedules.sort((a, b) => 
             timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
         );
@@ -1957,10 +1657,8 @@ function updateScheduleStatistics() {
         nextWindow = formatTimeForDisplay(futureSchedules[0].startTime);
     }
     
-    nextSmsWindow.textContent = nextWindow;
+    nextEmailWindow.textContent = nextWindow;
 }
-
-// Edit schedule
 function editSchedule(id) {
     if (!isSystemOn) return;
 
@@ -1974,12 +1672,8 @@ function editSchedule(id) {
     scheduleEndTime.value = schedule.endTime;
     scheduleActive.checked = schedule.isActive;
     scheduleStatusLabel.textContent = schedule.isActive ? 'Active' : 'Inactive';
-
-    // Scroll to form
     document.getElementById('schedule-management').scrollIntoView({ behavior: 'smooth' });
 }
-
-// Delete schedule
 function deleteSchedule(id) {
     if (!isSystemOn) {
         alert('System is OFF. Turn on the system to delete schedules.');
@@ -1993,8 +1687,6 @@ function deleteSchedule(id) {
     updateSchedulesTable();
     alert('Schedule deleted successfully!');
 }
-
-// Toggle schedule active status
 function toggleSchedule(id) {
     if (!isSystemOn) {
         alert('System is OFF. Turn on the system to toggle schedules.');
@@ -2011,8 +1703,6 @@ function toggleSchedule(id) {
     const status = schedule.isActive ? 'activated' : 'deactivated';
     alert(`Schedule ${status} successfully!`);
 }
-
-// Clear schedule form
 function clearScheduleFormFunc() {
     editingScheduleId = null;
     scheduleAdviserSelect.value = '';
@@ -2022,8 +1712,6 @@ function clearScheduleFormFunc() {
     scheduleActive.checked = true;
     scheduleStatusLabel.textContent = 'Active';
 }
-
-// Activate all schedules
 function activateAllSchedulesFunc() {
     if (!isSystemOn) {
         alert('System is OFF. Turn on the system to activate schedules.');
@@ -2040,8 +1728,6 @@ function activateAllSchedulesFunc() {
     updateSchedulesTable();
     alert('All schedules activated!');
 }
-
-// Deactivate all schedules
 function deactivateAllSchedulesFunc() {
     if (!isSystemOn) {
         alert('System is OFF. Turn on the system to deactivate schedules.');
@@ -2058,21 +1744,15 @@ function deactivateAllSchedulesFunc() {
     updateSchedulesTable();
     alert('All schedules deactivated!');
 }
-
-// Update schedule status label
 function updateScheduleStatusLabel() {
     scheduleStatusLabel.textContent = scheduleActive.checked ? 'Active' : 'Inactive';
 }
-
-// Initialize schedule event listeners
 function initializeScheduleEventListeners() {
     saveScheduleBtn.addEventListener('click', saveSchedule);
     clearScheduleForm.addEventListener('click', clearScheduleFormFunc);
     activateAllSchedules.addEventListener('click', activateAllSchedulesFunc);
     deactivateAllSchedules.addEventListener('click', deactivateAllSchedulesFunc);
     scheduleActive.addEventListener('change', updateScheduleStatusLabel);
-
-    // Delegated event listeners for schedule table actions
     document.addEventListener('click', function(e) {
         if (e.target.closest('.btn-edit-schedule')) {
             const btn = e.target.closest('.btn-edit-schedule');
@@ -2093,35 +1773,20 @@ function initializeScheduleEventListeners() {
         }
     });
 }
-
-// Start schedule monitoring
 function startScheduleMonitoring() {
-    // Update schedule statistics immediately
     updateScheduleStatistics();
-    
-    // Update every minute
     setInterval(updateScheduleStatistics, 60000);
 }
-
-// ========== WALL CHECKER ==========
-
-// Update wall UI - FIXED TO UPDATE TOGGLE BUTTONS
 function updateWallUI() {
     console.log('Updating wall UI with state:', wallState);
-
-    // Update toggle states FIRST
     wallNorthToggle.checked = wallState.north === 'plywood';
     wallEastToggle.checked = wallState.east === 'plywood';
     wallSouthToggle.checked = wallState.south === 'plywood';
     wallWestToggle.checked = wallState.west === 'plywood';
-
-    // Update wall visual classes
     wallItems.forEach(item => {
         const side = item.dataset.side;
         const wallType = wallState[side];
         item.className = `wall-item wall-${side} ${wallType}`;
-
-        // Update toggle container visual
         const toggleContainer = item.querySelector('.wall-toggle-container');
         if (toggleContainer) {
             const labels = toggleContainer.querySelectorAll('.wall-type-label');
@@ -2131,8 +1796,6 @@ function updateWallUI() {
             }
         }
     });
-
-    // Update counts and summary
     let concreteWalls = 0;
     let plywoodWalls = 0;
 
@@ -2144,8 +1807,6 @@ function updateWallUI() {
     concreteCount.textContent = concreteWalls;
     plywoodCount.textContent = plywoodWalls;
     wallSummary.textContent = `${concreteWalls} Concrete, ${plywoodWalls} Plywood`;
-
-    // Update footer status
     let footerStatus = 'Mixed';
     if (concreteWalls === 4) footerStatus = 'All Concrete';
     else if (plywoodWalls === 4) footerStatus = 'All Plywood';
@@ -2154,8 +1815,6 @@ function updateWallUI() {
 
     footerWallStatus.textContent = footerStatus;
     wallSystemStatus.textContent = 'Configured';
-
-    // Update noise adjustment rating
     let adjustmentRating = 'Medium';
     if (concreteWalls === 4) adjustmentRating = 'High (Increases readings)';
     else if (plywoodWalls === 4) adjustmentRating = 'Low (Decreases readings)';
@@ -2163,24 +1822,16 @@ function updateWallUI() {
     else if (plywoodWalls >= 3) adjustmentRating = 'Medium-Low';
 
     noiseAdjustment.textContent = adjustmentRating;
-
-    // Update sidebar
     updateSidebarBadges();
 
     console.log(`Wall composition: ${concreteWalls} concrete, ${plywoodWalls} plywood`);
 }
-
-// Initialize wall toggle event listeners - FIXED
 function initializeWallToggles() {
     console.log('Initializing wall toggles');
-
-    // Set initial toggle states based on wallState
-    updateWallUI(); // This will set all toggles to correct state
-
-    // Add fresh event listeners
+    updateWallUI();
     wallNorthToggle.addEventListener('change', function() {
         if (!isSystemOn) {
-            this.checked = !this.checked; // Revert the change
+            this.checked = !this.checked;
             alert('System is OFF. Turn on the system to change wall settings.');
             return;
         }
@@ -2192,7 +1843,7 @@ function initializeWallToggles() {
 
     wallEastToggle.addEventListener('change', function() {
         if (!isSystemOn) {
-            this.checked = !this.checked; // Revert the change
+            this.checked = !this.checked;
             alert('System is OFF. Turn on the system to change wall settings.');
             return;
         }
@@ -2204,7 +1855,7 @@ function initializeWallToggles() {
 
     wallSouthToggle.addEventListener('change', function() {
         if (!isSystemOn) {
-            this.checked = !this.checked; // Revert the change
+            this.checked = !this.checked;
             alert('System is OFF. Turn on the system to change wall settings.');
             return;
         }
@@ -2216,7 +1867,7 @@ function initializeWallToggles() {
 
     wallWestToggle.addEventListener('change', function() {
         if (!isSystemOn) {
-            this.checked = !this.checked; // Revert the change
+            this.checked = !this.checked;
             alert('System is OFF. Turn on the system to change wall settings.');
             return;
         }
@@ -2225,8 +1876,6 @@ function initializeWallToggles() {
         updateWallUI();
         saveWallState();
     });
-
-    // Set all concrete/plywood - FIXED TO UPDATE TOGGLES
     setAllConcreteBtn.addEventListener('click', function() {
         if (!isSystemOn) {
             alert('System is OFF. Turn on the system to change wall settings.');
@@ -2237,7 +1886,7 @@ function initializeWallToggles() {
         wallState.east = 'concrete';
         wallState.south = 'concrete';
         wallState.west = 'concrete';
-        updateWallUI(); // This will update the toggles
+        updateWallUI();
         saveWallState();
     });
 
@@ -2251,14 +1900,10 @@ function initializeWallToggles() {
         wallState.east = 'plywood';
         wallState.south = 'plywood';
         wallState.west = 'plywood';
-        updateWallUI(); // This will update the toggles
+        updateWallUI();
         saveWallState();
     });
 }
-
-// ========== SIMULATION CONTROLS ==========
-
-// Stop auto simulation
 function stopAutoSimulation() {
     isAutoSimulating = false;
     if (autoSimulateInterval) {
@@ -2269,12 +1914,8 @@ function stopAutoSimulation() {
     autoSimulateBtn.classList.remove('active');
     console.log('Stopped auto simulation');
 }
-
-// Initialize noise simulation event listeners
 function initializeNoiseSimulation() {
     console.log('Initializing noise simulation buttons');
-
-    // Add fresh event listeners
     simulateQuietBtn.addEventListener('click', function(e) {
         console.log('Quiet simulation clicked');
         e.stopPropagation();
@@ -2318,7 +1959,7 @@ function initializeNoiseSimulation() {
             console.log('Auto simulation is running, ignoring manual click');
             return;
         }
-        const loudDecibels = 110;
+        const loudDecibels =120;
         console.log(`Loud simulation: ${loudDecibels} dB`);
         updateNoiseDisplay(loudDecibels);
     });
@@ -2349,10 +1990,6 @@ function initializeNoiseSimulation() {
         }
     });
 }
-
-// ========== DATA EXPORT ==========
-
-// Download readings as text file
 function downloadReadingsAsText() {
     if (readingsHistory.length === 0) {
         alert('No readings to download');
@@ -2361,8 +1998,6 @@ function downloadReadingsAsText() {
 
     let text = 'NOISE MONITORING SYSTEM - READINGS REPORT\n';
     text += '===========================================\n\n';
-
-    // System Information
     const now = new Date();
     text += `Report Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}\n`;
     text += `System Status: ${isSystemOn ? 'ON' : 'OFF'}\n`;
@@ -2370,17 +2005,13 @@ function downloadReadingsAsText() {
     text += `Active Advisers: ${presentCount.textContent}\n`;
     text += `Scheduled Advisers: ${currentlyScheduled.textContent}\n`;
     text += `Wall Composition: ${concreteCount.textContent} Concrete, ${plywoodCount.textContent} Plywood\n`;
-    text += `SMS Notifications: ${smsSettings.enabled ? 'Enabled' : 'Disabled'}\n`;
-    text += `Total SMS Sent: ${totalSmsSent.textContent}\n\n`;
+    text += `Email Notifications: ${emailSettings.enabled ? 'Enabled' : 'Disabled'}\n`;
+    text += `Total Emails Sent: ${totalEmailsSent.textContent}\n\n`;
     text += '='.repeat(50) + '\n\n';
-
-    // Readings Data
     text += 'RECENT READINGS\n';
     text += '='.repeat(50) + '\n';
-    text += 'Time\t\tSource dB\tMeasured dB\tStatus\t\tSMS Status\tRecipients\n';
+    text += 'Time\t\tSource dB\tMeasured dB\tStatus\t\tEmail Status\tRecipients\n';
     text += '─'.repeat(100) + '\n';
-
-    // Filter out system events for the main table
     const regularReadings = readingsHistory.filter(r => !r.isSystemEvent);
     
     regularReadings.forEach((reading, index) => {
@@ -2388,27 +2019,21 @@ function downloadReadingsAsText() {
         const source = `${reading.originalDecibels} dB`.padEnd(12, ' ');
         const measured = `${reading.measuredDecibels} dB`.padEnd(14, ' ');
         const status = reading.status.padEnd(12, ' ');
-        const sms = reading.smsStatus.padEnd(12, ' ');
+        const email = reading.emailStatus.padEnd(12, '');
         const recipients = reading.recipients.length > 0
             ? reading.recipients.join(', ')
             : 'None';
 
-        text += `${time}\t${source}\t${measured}\t${status}\t${sms}\t${recipients}\n`;
-
-        // Add session info if available
+        text += `${time}\t${source}\t${measured}\t${status}\t${email}\t${recipients}\n`;
         if (reading.sessionInfo) {
             text += `\t Session: ${reading.sessionInfo}\n`;
         }
-
-        // Add separator every 3 readings
         if ((index + 1) % 3 === 0 && index !== regularReadings.length - 1) {
             text += '─'.repeat(100) + '\n';
         }
     });
 
     text += '\n' + '='.repeat(50) + '\n\n';
-
-    // Summary Statistics
     text += 'SUMMARY STATISTICS\n';
     text += '='.repeat(50) + '\n';
 
@@ -2416,22 +2041,20 @@ function downloadReadingsAsText() {
     const moderateReadings = regularReadings.filter(r => r.status === 'Moderate').length;
     const loudReadings = regularReadings.filter(r => r.status === 'Loud').length;
 
-    const smsSent = regularReadings.filter(r => r.smsStatus === 'Sent').length;
-    const smsFailed = regularReadings.filter(r => r.smsStatus === 'Failed').length;
-    const smsOnCooldown = regularReadings.filter(r => r.smsStatus === 'On Cooldown').length;
-    const smsNoSchedule = regularReadings.filter(r => r.smsStatus === 'No Scheduled Advisers').length;
+    const emailSent = regularReadings.filter(r => r.emailStatus === 'Sent').length;
+    const emailFailed = regularReadings.filter(r => r.emailStatus === 'Failed').length;
+    const emailOnCooldown = regularReadings.filter(r => r.emailStatus === 'On Cooldown').length;
+    const emailNoSchedule = regularReadings.filter(r => r.emailStatus === 'No Scheduled Advisers').length;
 
     text += `Total Readings: ${regularReadings.length}\n`;
     text += `Quiet Readings: ${quietReadings} (${regularReadings.length > 0 ? Math.round((quietReadings / regularReadings.length) * 100) : 0}%)\n`;
     text += `Moderate Readings: ${moderateReadings} (${regularReadings.length > 0 ? Math.round((moderateReadings / regularReadings.length) * 100) : 0}%)\n`;
     text += `Loud Readings: ${loudReadings} (${regularReadings.length > 0 ? Math.round((loudReadings / regularReadings.length) * 100) : 0}%)\n\n`;
 
-    text += `SMS Sent Successfully: ${smsSent}\n`;
-    text += `SMS Failed: ${smsFailed}\n`;
-    text += `SMS Blocked (Cooldown): ${smsOnCooldown}\n`;
-    text += `SMS Blocked (No Schedule): ${smsNoSchedule}\n`;
-
-    // Calculate averages
+    text += `Email Sent Successfully: ${emailSent}\n`;
+    text += `Email Failed: ${emailFailed}\n`;
+    text += `Email Blocked (Cooldown): ${emailOnCooldown}\n`;
+    text += `Email Blocked (No Schedule): ${emailNoSchedule}\n`;
     let avgOriginal = 0;
     let avgMeasured = 0;
     let avgAdjustment = 0;
@@ -2448,8 +2071,6 @@ function downloadReadingsAsText() {
 
     text += '\n' + '='.repeat(50) + '\n';
     text += 'END OF REPORT\n';
-
-    // Create and download file
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2463,8 +2084,6 @@ function downloadReadingsAsText() {
 
     alert('Report downloaded successfully!');
 }
-
-// Print readings report
 function printReadingsReport() {
     if (readingsHistory.length === 0) {
         alert('No readings to print');
@@ -2473,18 +2092,14 @@ function printReadingsReport() {
 
     const now = new Date();
     const printWindow = window.open('', '_blank');
-
-    // Filter out system events for the main table
     const regularReadings = readingsHistory.filter(r => !r.isSystemEvent);
-    
-    // Calculate statistics
     const quietReadings = regularReadings.filter(r => r.status === 'Quiet').length;
     const moderateReadings = regularReadings.filter(r => r.status === 'Moderate').length;
     const loudReadings = regularReadings.filter(r => r.status === 'Loud').length;
 
-    const smsSent = regularReadings.filter(r => r.smsStatus === 'Sent').length;
-    const smsFailed = regularReadings.filter(r => r.smsStatus === 'Failed').length;
-    const smsOnCooldown = regularReadings.filter(r => r.smsStatus === 'On Cooldown').length;
+    const emailSent = regularReadings.filter(r => r.emailStatus === 'Sent').length;
+    const emailFailed = regularReadings.filter(r => r.emailStatus === 'Failed').length;
+    const emailOnCooldown = regularReadings.filter(r => r.emailStatus === 'On Cooldown').length;
 
     const avgOriginal = regularReadings.length > 0 
         ? regularReadings.reduce((sum, r) => sum + r.originalDecibels, 0) / regularReadings.length 
@@ -2526,10 +2141,10 @@ function printReadingsReport() {
                         <strong>Wall Composition:</strong> ${concreteCount.textContent} Concrete, ${plywoodCount.textContent} Plywood
                     </div>
                     <div class="info-item">
-                        <strong>SMS Notifications:</strong> ${smsSettings.enabled ? 'Enabled' : 'Disabled'}
+                        <strong>Email Notifications:</strong> ${emailSettings.enabled ? 'Enabled' : 'Disabled'}
                     </div>
                     <div class="info-item">
-                        <strong>Total SMS Sent:</strong> ${totalSmsSent.textContent}
+                        <strong>Total Emails Sent:</strong> ${totalEmailsSent.textContent}
                     </div>
                 </div>
             </div>
@@ -2549,7 +2164,7 @@ function printReadingsReport() {
                             <th>Source dB</th>
                             <th>Measured dB</th>
                             <th>Status</th>
-                            <th>SMS Status</th>
+                            <th>Email Status</th>
                             <th>Recipients</th>
                         </tr>
                     </thead>
@@ -2558,10 +2173,10 @@ function printReadingsReport() {
 
         regularReadings.forEach(reading => {
             const statusClass = `status-${reading.status.toLowerCase()}`;
-            let smsClass = '';
-            if (reading.smsStatus === 'Sent') smsClass = 'sms-sent';
-            else if (reading.smsStatus === 'Failed') smsClass = 'sms-failed';
-            else if (reading.smsStatus === 'On Cooldown') smsClass = 'sms-cooldown';
+            let emailClass = '';
+            if (reading.emailStatus === 'Sent') emailClass = 'email-sent';
+            else if (reading.emailStatus === 'Failed') emailClass = 'email-failed';
+            else if (reading.emailStatus === 'On Cooldown') emailClass = 'email-cooldown';
 
             html += `
                 <tr>
@@ -2569,7 +2184,7 @@ function printReadingsReport() {
                     <td>${reading.originalDecibels} dB</td>
                     <td>${reading.measuredDecibels} dB</td>
                     <td class="${statusClass}">${reading.status}</td>
-                    <td class="${smsClass}">${reading.smsStatus}</td>
+                    <td class="${emailClass}">${reading.emailStatus}</td>
                     <td>${reading.recipients.length > 0 ? reading.recipients.join(', ') : 'None'}</td>
                 </tr>
             `;
@@ -2612,11 +2227,11 @@ function printReadingsReport() {
 
                 <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
                     <div>
-                        <h3>SMS Statistics</h3>
+                        <h3>Email Statistics</h3>
                         <ul style="margin: 10px 0; padding-left: 20px;">
-                            <li>SMS Sent Successfully: <strong>${smsSent}</strong></li>
-                            <li>SMS Failed: <strong>${smsFailed}</strong></li>
-                            <li>SMS Blocked (Cooldown): <strong>${smsOnCooldown}</strong></li>
+                            <li>Email Sent Successfully: <strong>${emailSent}</strong></li>
+                            <li>Email Failed: <strong>${emailFailed}</strong></li>
+                            <li>Email Blocked (Cooldown): <strong>${emailOnCooldown}</strong></li>
                         </ul>
                     </div>
                     <div>
@@ -2634,7 +2249,7 @@ function printReadingsReport() {
 
     html += `
             <div class="footer">
-                <p>Noise Monitoring System © ${now.getFullYear()} | Admin Dashboard Report</p>
+                <p>Noise Monitoring System &copy; ${now.getFullYear()} | Admin Dashboard Report</p>
                 <p>This report was automatically generated by the Noise Monitoring System.</p>
                 <button class="no-print" onclick="window.print()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">
                     Print Report
@@ -2655,146 +2270,181 @@ function printReadingsReport() {
     printWindow.document.write(html);
     printWindow.document.close();
 }
+// Add Gmail connection test function
+async function testGmailConnection() {
+    try {
+        console.log('Testing Gmail connection to ESP32...');
+        const response = await fetch('/api/noise');
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Gmail connection test result:', data);
+            return data.emailSent !== undefined;
+        }
+        return false;
+    } catch (error) {
+        console.error('Gmail connection test failed:', error);
+        return false;
+    }
+}
 
-// ========== EVENT LISTENERS ==========
+// Update sync button text to reflect Gmail
+const syncEmailsBtn = document.querySelector('.sync-btn');
+if (syncEmailsBtn) {
+    syncEmailsBtn.innerHTML = '<i class="fas fa-sync"></i> Sync Gmail';
+}
 
-// Test SMS button
-testSmsBtn.addEventListener('click', function() {
+testEmailBtn.addEventListener('click', async function() {
     if (!isSystemOn) {
-        alert('System is OFF. Turn on the system to send test SMS.');
+        alert('System is OFF. Turn on the system to send test Gmail.');
         return;
     }
 
     const presentAdvisers = advisers.filter(a => a.status === 'present');
     if (presentAdvisers.length === 0) {
-        alert('No present advisers to send test SMS to');
+        alert('No present advisers to send test Gmail to');
         return;
     }
-
-    // Get current time info for the alert
+    
+    // Check if advisers have Gmail addresses
+    const advisersWithGmail = presentAdvisers.filter(a => a.number && a.number.includes('@'));
+    if (advisersWithGmail.length === 0) {
+        alert('No present advisers have Gmail addresses configured');
+        return;
+    }
+    
     const currentDay = getCurrentDay();
     const currentTime = getCurrentTime();
     const currentTimeDisplay = formatTimeForDisplay(currentTime);
     
-    const message = `Send test SMS to ${presentAdvisers.length} present adviser(s)?\n\n` +
+    const message = `Send test Gmail to ${advisersWithGmail.length} present adviser(s)?\n\n` +
                    `Current Time: ${currentTimeDisplay}\n` +
                    `Current Day: ${capitalizeFirst(currentDay)}\n\n` +
-                   `Note: SMS will only be sent to advisers who are:\n` +
-                   `1. Marked as "Present"\n` +
-                   `2. Have an active schedule for ${currentTimeDisplay} on ${capitalizeFirst(currentDay)}`;
+                   `Note: Gmail will only be sent to advisers who are:\n` +
+                   `1. Present\n` +
+                   `2. Have an active schedule for ${currentTimeDisplay} on ${capitalizeFirst(currentDay)}\n` +
+                   `3. Have Gmail addresses configured`;
     
     if (confirm(message)) {
-        const originalText = testSmsBtn.innerHTML;
-        testSmsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-        testSmsBtn.disabled = true;
+        const originalText = testEmailBtn.innerHTML;
+        testEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Gmail...';
+        testEmailBtn.disabled = true;
 
-        setTimeout(() => {
-            const success = sendSMS(85, 'Loud (Test)', presentAdvisers.map(a => a.name));
+        try {
+            // Test Gmail connection first
+            const connectionOk = await testGmailConnection();
+            if (!connectionOk) {
+                throw new Error('ESP32 Gmail connection not responding');
+            }
+            
+            // Sync email addresses to hardware first
+            console.log('Syncing Gmail addresses before test...');
+            await syncEmailAddressesToHardware();
+            
+            // Small delay to ensure ESP32 processes the addresses
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Send test email
+            const success = await sendEmail(85, 'Loud (Test)', advisersWithGmail.map(a => a.name));
 
             if (success) {
-                alert(`✓ Test SMS sent successfully!\n\n` +
-                      `Check the Recent Readings table for details on which advisers received the SMS.`);
+                alert(`✓ Test Gmail sent successfully!\n\n` +
+                      `Check the Recent Readings table for details on which advisers received the Gmail.\n` +
+                      `The ESP32 hardware will send the actual Gmail messages.`);
             } else {
-                alert(`✗ Failed to send test SMS.\n\n` +
+                alert(`✗ Failed to send test Gmail.\n\n` +
                       `Possible reasons:\n` +
                       `• No advisers are scheduled for current time (${currentTimeDisplay})\n` +
-                      `• System is on cooldown\n` +
+                      `• All scheduled advisers already notified this session\n` +
+                      `• ESP32 Gmail connection issues\n` +
                       `• Check console for detailed logs`);
             }
 
-            testSmsBtn.innerHTML = originalText;
-            testSmsBtn.disabled = false;
-        }, 2000);
+        } catch (error) {
+            console.error('Test Gmail error:', error);
+            alert(`✗ Error sending test Gmail: ${error.message}\n\n` +
+                  'Please check the console for detailed error information.');
+        } finally {
+            testEmailBtn.innerHTML = originalText;
+            testEmailBtn.disabled = false;
+        }
     }
 });
-
-// Modal event listeners
 closeEditModal.addEventListener('click', closeEditModalFunc);
 cancelEditBtn.addEventListener('click', closeEditModalFunc);
 editModalOverlay.addEventListener('click', function(e) {
     if (e.target === editModalOverlay) closeEditModalFunc();
 });
-
-// Logout functionality
 logoutBtn.addEventListener('click', function() {
     if (confirm('Are you sure you want to logout?')) {
         localStorage.removeItem('isLoggedIn');
         stopAutoSimulation();
-        if (smsCooldownTimer) {
-            clearInterval(smsCooldownTimer);
+        if (emailCooldownTimer) {
+            clearInterval(emailCooldownTimer);
         }
         window.location.href = 'index.html';
     }
 });
-
-// ========== DATA PERSISTENCE ==========
-
-// Load saved state from localStorage
 function loadSavedState() {
-    // Load system power state
     const savedSystemPower = localStorage.getItem('systemPower');
     if (savedSystemPower !== null) {
         isSystemOn = savedSystemPower === 'true';
     }
-    
-    // Load noise monitoring state
     const savedState = localStorage.getItem('noiseMonitorState');
     if (savedState) {
         const state = JSON.parse(savedState);
         currentDecibels = state.currentDecibels || 65;
         readingsHistory = state.readingsHistory || [];
     }
-
-    // Load advisers
     const savedAdvisers = localStorage.getItem('advisers');
     if (savedAdvisers) {
         advisers = JSON.parse(savedAdvisers);
     } else {
-        // Add sample advisers if none exist
         advisers = [
             {
                 id: 1,
-                name: "Dr. Maria Santos",
-                subject: "Physics",
-                number: "+63 912 345 6789",
+                name: "Mark Jarred Malacao",
+                subject: "Adviser 1",
+                number: "markjarredmalacao540@gmail.com",
                 status: "present"
             },
             {
                 id: 2,
-                name: "Prof. Juan Dela Cruz",
-                subject: "Mathematics",
-                number: "+63 923 456 7890",
-                status: "on-leave"
+                name: "Serene XDA",
+                subject: "Adviser 2",
+                number: "serenexda@gmail.com",
+                status: "present"
             },
             {
                 id: 3,
-                name: "Engr. Robert Lim",
-                subject: "Computer Science",
-                number: "+63 934 567 8901",
+                name: "Maxine 101408",
+                subject: "Adviser 3",
+                number: "maxine101408@gmail.com",
                 status: "present"
             }
         ];
         saveAdvisers();
     }
-
-    // Load SMS settings
-    const savedSmsSettings = localStorage.getItem('smsSettings');
-    if (savedSmsSettings) {
-        smsSettings = JSON.parse(savedSmsSettings);
+    const savedEmailSettings = localStorage.getItem('emailSettings');
+    if (savedEmailSettings) {
+        emailSettings = JSON.parse(savedEmailSettings);
     }
-
-    // Load SMS cooldown settings
-    const savedCooldown = localStorage.getItem('smsCooldown');
+    const savedCooldown = localStorage.getItem('emailCooldown');
     if (savedCooldown) {
-        smsCooldown = JSON.parse(savedCooldown);
+        emailCooldown = JSON.parse(savedCooldown);
     }
-
-    // Load teacher schedules
+    const savedNotified = localStorage.getItem('adviserNotifiedInSession');
+    if (savedNotified) {
+        try {
+            const parsed = JSON.parse(savedNotified);
+            adviserNotifiedInSession = typeof parsed === 'object' && parsed !== null ? parsed : {};
+        } catch (e) {
+            adviserNotifiedInSession = {};
+        }
+    }
     const savedSchedules = localStorage.getItem('teacherSchedules');
     if (savedSchedules) {
         teacherSchedules = JSON.parse(savedSchedules);
     } else {
-        // Add sample schedules
         const now = new Date();
         const currentHour = now.getHours().toString().padStart(2, '0');
         const currentMinute = now.getMinutes().toString().padStart(2, '0');
@@ -2822,26 +2472,18 @@ function loadSavedState() {
         ];
         saveSchedules();
     }
-
-    // Load SMS sessions
-    const savedSessions = localStorage.getItem('smsSessions');
+    const savedSessions = localStorage.getItem('emailSessions');
     if (savedSessions) {
-        smsSessions = JSON.parse(savedSessions);
+        emailSessions = JSON.parse(savedSessions);
     }
-
-    // Load wall checker state
     const savedWallState = localStorage.getItem('wallCheckerState');
     if (savedWallState) {
         wallState = JSON.parse(savedWallState);
     }
-
-    // Update UI
-    updateSmsSettingsUI();
+    updateEmailSettingsUI();
     updateCooldownUI();
     updateScheduleStatistics();
 }
-
-// Save functions
 function saveState() {
     const state = {
         currentDecibels: currentDecibels,
@@ -2854,20 +2496,25 @@ function saveAdvisers() {
     localStorage.setItem('advisers', JSON.stringify(advisers));
 }
 
-function saveSmsSettings() {
-    localStorage.setItem('smsSettings', JSON.stringify(smsSettings));
+function saveEmailSettings() {
+    localStorage.setItem('emailSettings', JSON.stringify(emailSettings));
 }
 
 function saveCooldownSettings() {
-    localStorage.setItem('smsCooldown', JSON.stringify(smsCooldown));
+    localStorage.setItem('emailCooldown', JSON.stringify(emailCooldown));
+}
+function saveAdviserNotifiedInSession() {
+    const toSave = {};
+    Object.keys(adviserNotifiedInSession).forEach(k => { toSave[k] = adviserNotifiedInSession[k]; });
+    localStorage.setItem('adviserNotifiedInSession', JSON.stringify(toSave));
 }
 
 function saveSchedules() {
     localStorage.setItem('teacherSchedules', JSON.stringify(teacherSchedules));
 }
 
-function saveSmsSessions() {
-    localStorage.setItem('smsSessions', JSON.stringify(smsSessions));
+function saveEmailSessions() {
+    localStorage.setItem('emailSessions', JSON.stringify(emailSessions));
 }
 
 function saveWallState() {
@@ -2877,15 +2524,9 @@ function saveWallState() {
 function saveSystemPower() {
     localStorage.setItem('systemPower', isSystemOn.toString());
 }
-
-// ========== HELPER FUNCTIONS ==========
-
-// Helper function to capitalize first letter
 function capitalizeFirst(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
-
-// Debug function to check all schedules
 function debugSchedules() {
     console.log('\n=== SCHEDULE DEBUG INFO ===');
     console.log(`Current Time: ${getCurrentTime()} (${formatTimeForDisplay(getCurrentTime())})`);
@@ -2903,10 +2544,6 @@ function debugSchedules() {
         console.log(`${index + 1}. ${adviser.name} - ${schedules.length} active schedule(s)`);
     });
 }
-
-// ========== KEYBOARD SHORTCUTS ==========
-
-// Keyboard shortcuts
 document.addEventListener('keydown', function(event) {
     if (!isSystemOn) return;
 
@@ -2955,8 +2592,6 @@ document.addEventListener('keydown', function(event) {
             break;
     }
 });
-
-// Tooltip for keyboard shortcuts
 window.addEventListener('load', function() {
     setTimeout(function() {
         alert('Tip: Use keyboard shortcuts:\n' +
@@ -2967,10 +2602,6 @@ window.addEventListener('load', function() {
               'Ctrl+Shift+O = Toggle system power');
     }, 1000);
 });
-
-// ========== PAGE VISIBILITY HANDLING ==========
-
-// Handle page visibility change
 document.addEventListener('visibilitychange', function() {
     if (document.hidden && isAutoSimulating) {
         clearInterval(autoSimulateInterval);
@@ -2986,8 +2617,6 @@ document.addEventListener('visibilitychange', function() {
         }, 3000);
     }
 });
-
-// Clean up on page unload
 window.addEventListener('beforeunload', function() {
     if (isAutoSimulating) {
         clearInterval(autoSimulateInterval);
@@ -2996,8 +2625,6 @@ window.addEventListener('beforeunload', function() {
         clearInterval(smsCooldownTimer);
     }
 });
-
-// Close sidebar when clicking outside on mobile
 document.addEventListener('click', function(event) {
     if (window.innerWidth <= 768 && isSidebarOpen) {
         if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
